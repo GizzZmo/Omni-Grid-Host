@@ -1,0 +1,14 @@
+{
+  "id": "gizzzmo.system.phase5",
+  "name": "Phase 5 Enterprise Mesh",
+  "version": "5.0.0",
+  "repository": "https://github.com/GizzZmo/Omni-Grid-Host",
+  "category": "SYSTEM",
+  "isolation": "native-esm",
+  "entryPoint": "/plugins/phase5-command/index.js",
+  "defaultLayout": { "w": 6, "h": 5, "minW": 4, "minH": 4 },
+  "crossTalk": {
+    "accepts": ["ai/agent-task", "system/workspace"],
+    "emits": ["ai/agent-task", "ai/prompt", "system/workspace"]
+  }
+}
