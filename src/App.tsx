@@ -5,6 +5,7 @@ import { StatusBar } from './components/StatusBar';
 
 export default function App() {
   const theme = useOmniStore(s => s.theme);
+  const locked = useOmniStore(s => s.locked);
 
   return (
     <div className={`h-screen w-screen flex flex-col bg-cyber-bg text-white ${theme}`}>
@@ -17,7 +18,17 @@ export default function App() {
         <Launcher />
       </header>
       <main className="flex-1 relative overflow-hidden">
-        <GridContainer />
+        <div className={locked ? 'blur-md pointer-events-none select-none' : ''}>
+          <GridContainer />
+        </div>
+        {locked && (
+          <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="text-center">
+              <div className="text-red-400 text-2xl font-bold tracking-widest mb-2">BIOMETRIC LOCK</div>
+              <div className="text-xs text-cyan-300/70">Face-Recon active — sensitive widgets blurred</div>
+            </div>
+          </div>
+        )}
       </main>
       <StatusBar />
     </div>
