@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cyber-bg: #0a0a0f;
+  --color-cyber-panel: #12121a;
+  --color-cyber-accent: #00f0ff;
+  --color-cyber-magenta: #ff00aa;
+  --color-cyber-green: #00ff88;
+}
+
+body {
+  background: #0a0a0f;
+  color: #e0e0ff;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  margin: 0;
+  overflow: hidden;
+}
+
+.cyber-border {
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  box-shadow: 0 0 12px rgba(0, 240, 255, 0.1);
+}
+
+.scanline {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  pointer-events: none;
+}

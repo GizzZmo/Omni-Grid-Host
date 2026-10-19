@@ -1,0 +1,18 @@
+[
+  {
+    "id": "gizzzmo.audio.dsp4guitar",
+    "name": "DSP4Guitar Studio Rack",
+    "category": "AUDIO",
+    "uiEntry": "SonicRack",
+    "runtime": {
+      "type": "cpp-wasm",
+      "binaryOrScript": "./bin/dsp4guitar.wasm",
+      "permissions": ["usb-audio", "midi"]
+    },
+    "crossTalk": {
+      "accepts": ["audio/pcm", "audio/midi"],
+      "emits": ["audio/pcm"]
+    },
+    "description": "JUCE multi-effect chain compiled to WASM AudioWorklet"
+  }
+]
