@@ -23,6 +23,7 @@ export default function DSP4GuitarWidget({ bus }: OmniWidgetHostProps) {
   const [inputDevices, setInputDevices] = useState<MediaDeviceInfo[]>([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
   const [inputError, setInputError] = useState<string>('');
+  const [inputGain, setInputGain] = useState(1.0);
   const [rmsLevel, setRmsLevel] = useState(0);
   const [lastMidiEvent, setLastMidiEvent] = useState<string>('Waiting for TABFRET / WebMIDI...');
   const [params, setParams] = useState<GuitarPreset>(PRESETS[0]);
@@ -34,6 +35,7 @@ export default function DSP4GuitarWidget({ bus }: OmniWidgetHostProps) {
   const rafRef = useRef<number | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const inputGainRef = useRef<GainNode | null>(null);
 
   const initAudioEngine = async () => {
     if (audioCtxRef.current) return;
@@ -74,6 +76,8 @@ export default function DSP4GuitarWidget({ bus }: OmniWidgetHostProps) {
   const stopLiveInput = () => {
     sourceRef.current?.disconnect();
     sourceRef.current = null;
+    inputGainRef.current?.disconnect();
+    inputGainRef.current = null;
     streamRef.current?.getTracks().forEach(t => t.stop());
     streamRef.current = null;
     setLiveInputActive(false);
@@ -99,9 +103,13 @@ export default function DSP4GuitarWidget({ bus }: OmniWidgetHostProps) {
         },
       });
       const micSource = ctx.createMediaStreamSource(stream);
-      micSource.connect(worklet);
+      const gain = ctx.createGain();
+      gain.gain.value = inputGain;
+      micSource.connect(gain);
+      gain.connect(worklet);
       streamRef.current = stream;
       sourceRef.current = micSource;
+      inputGainRef.current = gain;
       setLiveInputActive(true);
       setInputError('');
       const devices = await navigator.mediaDevices.enumerateDevices();
@@ -173,6 +181,17 @@ export default function DSP4GuitarWidget({ bus }: OmniWidgetHostProps) {
             </select>
           )}
           {inputError && <span className="text-rose-400 text-[10px]">{inputError}</span>}
+          {liveInputActive && (
+            <label className="flex items-center gap-1.5 bg-slate-900/70 px-2 py-1 rounded border border-slate-800">
+              <span className="text-[10px] text-cyan-400">INPUT</span>
+              <input type="range" min="0" max="4" step="0.05" value={inputGain} onChange={(e) => {
+                const v = parseFloat(e.target.value);
+                setInputGain(v);
+                if (inputGainRef.current) inputGainRef.current.gain.value = v;
+              }} className="accent-cyan-400 w-20" title={`Input gain ${inputGain.toFixed(2)}x`} />
+              <span className="text-[10px] text-slate-400 w-8">{inputGain.toFixed(1)}x</span>
+            </label>
+          )}
         </div>
         <select value={params.name} onChange={(e) => {
           const found = PRESETS.find((p) => p.name === e.target.value);
