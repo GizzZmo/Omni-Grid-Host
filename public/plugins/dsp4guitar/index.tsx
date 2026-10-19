@@ -24,6 +24,7 @@ export default function DSP4GuitarWidget({ bus }: OmniWidgetHostProps) {
   const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
   const [inputError, setInputError] = useState<string>('');
   const [inputGain, setInputGain] = useState(1.0);
+  const [outputGain, setOutputGain] = useState(0.8);
   const [rmsLevel, setRmsLevel] = useState(0);
   const [lastMidiEvent, setLastMidiEvent] = useState<string>('Waiting for TABFRET / WebMIDI...');
   const [params, setParams] = useState<GuitarPreset>(PRESETS[0]);
@@ -36,6 +37,7 @@ export default function DSP4GuitarWidget({ bus }: OmniWidgetHostProps) {
   const streamRef = useRef<MediaStream | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const inputGainRef = useRef<GainNode | null>(null);
+  const outputGainRef = useRef<GainNode | null>(null);
 
   const initAudioEngine = async () => {
     if (audioCtxRef.current) return;
@@ -46,14 +48,18 @@ export default function DSP4GuitarWidget({ bus }: OmniWidgetHostProps) {
     });
     const analyser = ctx.createAnalyser();
     analyser.fftSize = 256;
+    const outputGainNode = ctx.createGain();
+    outputGainNode.gain.value = outputGain;
     worklet.connect(analyser);
-    analyser.connect(ctx.destination);
+    analyser.connect(outputGainNode);
+    outputGainNode.connect(ctx.destination);
     worklet.port.onmessage = (e) => {
       if (e.data?.type === 'TELEMETRY') setRmsLevel(e.data.rms);
     };
     audioCtxRef.current = ctx;
     workletNodeRef.current = worklet;
     analyserRef.current = analyser;
+    outputGainRef.current = outputGainNode;
     setEngineReady(true);
     worklet.port.postMessage({ type: 'SET_PARAMS', payload: params });
     startVisualizerLoop();
@@ -90,7 +96,6 @@ export default function DSP4GuitarWidget({ bus }: OmniWidgetHostProps) {
     const ctx = audioCtxRef.current!;
     const worklet = workletNodeRef.current!;
     if (ctx.state === 'suspended') await ctx.resume();
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -192,6 +197,15 @@ export default function DSP4GuitarWidget({ bus }: OmniWidgetHostProps) {
               <span className="text-[10px] text-slate-400 w-8">{inputGain.toFixed(1)}x</span>
             </label>
           )}
+          <label className="flex items-center gap-1.5 bg-slate-900/70 px-2 py-1 rounded border border-slate-800">
+            <span className="text-[10px] text-emerald-400">PHONES</span>
+            <input type="range" min="0" max="1.5" step="0.01" value={outputGain} onChange={(e) => {
+              const v = parseFloat(e.target.value);
+              setOutputGain(v);
+              if (outputGainRef.current) outputGainRef.current.gain.value = v;
+            }} className="accent-emerald-400 w-20" title={`Output volume ${(outputGain * 100).toFixed(0)}%`} />
+            <span className="text-[10px] text-slate-400 w-8">{Math.round(outputGain * 100)}%</span>
+          </label>
         </div>
         <select value={params.name} onChange={(e) => {
           const found = PRESETS.find((p) => p.name === e.target.value);
