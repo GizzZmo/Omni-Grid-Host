@@ -22,7 +22,10 @@ Autonomy mode, adaptive weights, learning signals, Phase 6 widget.
 Health probes, circuit breakers, automatic recovery, fault injection, Phase 7 widget.
 
 ## Phase 8 — Quantum-Resistant Encryption ✅
-Hybrid classical + simulated PQC (Kyber/Dilithium/SPHINCS), keygen, rotation, encrypt/decrypt, sign/verify, Phase 8 widget.
+Hybrid classical + simulated PQC, keygen, rotation, encrypt/decrypt, sign/verify.
 
-## Future (Phase 9+)
-Real Kyber/Dilithium WASM, signed plugin manifests, multi-node mesh, encrypted workspace export, deeper RL policies.
+## Phase 9 — Self-Healing Network ✅
+Topology-aware mesh, redundant links, BFS path finding, automatic link healing, reroute controls.
+
+## Future (Phase 10+)
+Real Kyber/Dilithium WASM, signed plugin manifests, multi-node mesh over authenticated WebSocket, encrypted workspace export, deeper RL policies.

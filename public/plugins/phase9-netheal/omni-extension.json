@@ -1,0 +1,11 @@
+{
+  "id": "gizzzmo.system.phase9",
+  "name": "Phase 9 Self-Healing Network",
+  "version": "9.0.0",
+  "repository": "https://github.com/GizzZmo/Omni-Grid-Host",
+  "category": "SYSTEM",
+  "isolation": "native-esm",
+  "entryPoint": "/plugins/phase9-netheal/index.js",
+  "defaultLayout": { "w": 6, "h": 5, "minW": 4, "minH": 4 },
+  "crossTalk": { "accepts": [], "emits": [] }
+}
