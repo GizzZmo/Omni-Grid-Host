@@ -1,0 +1,23 @@
+[package]
+name = "omni-grid-host"
+version = "3.0.0"
+description = "Omni-Grid Host 3.0 — Polyglot Microkernel Desktop Host"
+authors = ["GizzZmo"]
+edition = "2021"
+
+[build]
+before-dev-command = "npm run dev"
+dev-url = "http://localhost:5173"
+before-build-command = "npm run build"
+frontend-dist = "../dist"
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-shell = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
