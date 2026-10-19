@@ -18,5 +18,8 @@ Multi-workspace profiles, HoverMind OS capture, agent mesh router, enterprise au
 ## Phase 6 — Agent Autonomy & Adaptive Learning ✅
 Autonomy mode, adaptive weights, learning signals, Phase 6 widget.
 
-## Future (Phase 7+)
+## Phase 7 — Self-Healing and Fault Tolerance ✅
+Health probes, circuit breakers, automatic recovery, fault injection, Phase 7 widget.
+
+## Future (Phase 8+)
 Real HoverMind OCR via Tauri, signed manifests, multi-node mesh, encrypted workspace export, deeper RL policies.

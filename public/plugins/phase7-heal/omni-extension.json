@@ -1,0 +1,11 @@
+{
+  "id": "gizzzmo.system.phase7",
+  "name": "Phase 7 Self-Healing",
+  "version": "7.0.0",
+  "repository": "https://github.com/GizzZmo/Omni-Grid-Host",
+  "category": "SYSTEM",
+  "isolation": "native-esm",
+  "entryPoint": "/plugins/phase7-heal/index.js",
+  "defaultLayout": { "w": 6, "h": 5, "minW": 4, "minH": 4 },
+  "crossTalk": { "accepts": [], "emits": [] }
+}
