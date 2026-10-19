@@ -11,7 +11,10 @@
     "dev:full": "concurrently \"npm run daemon\" \"npm run dev\"",
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "desktop": "npm run tauri:dev",
+    "plugin:bundle": "tsx scripts/omni-plugin-cli.ts",
+    "plugin:sync-all": "tsx scripts/omni-plugin-cli.ts --batch-profile"
   },
   "dependencies": {
     "react": "^19.0.0",
