@@ -15,5 +15,8 @@ Tauri skeleton, dynamic loader, local plugin map, Repo-to-Widget CLI.
 ## Phase 5 — Enterprise Mesh ✅
 Multi-workspace profiles, HoverMind OS capture, agent mesh router, enterprise audit log.
 
-## Future (Phase 6+)
-Real HoverMind OCR via Tauri, signed manifests, multi-node mesh, encrypted workspace export.
+## Phase 6 — Agent Autonomy & Adaptive Learning ✅
+Autonomy mode, adaptive weights, learning signals, Phase 6 widget.
+
+## Future (Phase 7+)
+Real HoverMind OCR via Tauri, signed manifests, multi-node mesh, encrypted workspace export, deeper RL policies.

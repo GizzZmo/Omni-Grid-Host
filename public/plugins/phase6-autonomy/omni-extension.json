@@ -1,0 +1,11 @@
+{
+  "id": "gizzzmo.system.phase6",
+  "name": "Phase 6 Agent Autonomy",
+  "version": "6.0.0",
+  "repository": "https://github.com/GizzZmo/Omni-Grid-Host",
+  "category": "SYSTEM",
+  "isolation": "native-esm",
+  "entryPoint": "/plugins/phase6-autonomy/index.js",
+  "defaultLayout": { "w": 6, "h": 5, "minW": 4, "minH": 4 },
+  "crossTalk": { "accepts": ["ai/agent-task"], "emits": ["ai/agent-task"] }
+}
