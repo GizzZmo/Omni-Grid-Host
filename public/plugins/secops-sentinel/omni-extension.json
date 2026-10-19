@@ -1,0 +1,19 @@
+{
+  "id": "gizzzmo.secops.sentinel",
+  "name": "AutoSec + Face-Recon Sentinel",
+  "version": "2.4.0",
+  "repository": "https://github.com/GizzZmo/AutoSec",
+  "category": "SECOPS",
+  "isolation": "native-esm",
+  "entryPoint": "/plugins/secops-sentinel/index.js",
+  "defaultLayout": { "w": 6, "h": 5, "minW": 4, "minH": 4 },
+  "sidecar": {
+    "type": "cpp-daemon",
+    "endpoint": "ws://localhost:1234/ipc/pcap-stream",
+    "permissions": ["pcap-net", "webcam", "gemini-api"]
+  },
+  "crossTalk": {
+    "accepts": ["sec/pcap-packet", "sec/biometric-auth", "ai/agent-task"],
+    "emits": ["ai/prompt", "text/plain", "sec/pcap-packet"]
+  }
+}
