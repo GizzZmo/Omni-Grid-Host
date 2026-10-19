@@ -6,10 +6,21 @@ export function isTauri(): boolean {
   return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 }
 
-export async function getHostInfo(): Promise<{ mode: string; version: string; daemon_running: boolean } | null> {
+async function loadTauriInvoke(): Promise<((cmd: string, args?: unknown) => Promise<any>) | null> {
   if (!isTauri()) return null;
   try {
-    const { invoke } = await import('@tauri-apps/api/core');
+    // @vite-ignore prevents Vite from statically resolving the optional Tauri package
+    const mod = await import(/* @vite-ignore */ '@tauri-apps/api/core');
+    return mod.invoke;
+  } catch {
+    return null;
+  }
+}
+
+export async function getHostInfo(): Promise<{ mode: string; version: string; daemon_running: boolean } | null> {
+  const invoke = await loadTauriInvoke();
+  if (!invoke) return null;
+  try {
     return await invoke('host_info');
   } catch {
     return null;
@@ -17,9 +28,9 @@ export async function getHostInfo(): Promise<{ mode: string; version: string; da
 }
 
 export async function setDaemonRunning(running: boolean): Promise<boolean> {
-  if (!isTauri()) return false;
+  const invoke = await loadTauriInvoke();
+  if (!invoke) return false;
   try {
-    const { invoke } = await import('@tauri-apps/api/core');
     return await invoke('daemon_set', { running });
   } catch {
     return false;
