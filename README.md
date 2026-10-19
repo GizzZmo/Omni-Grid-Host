@@ -44,5 +44,40 @@ yarn dev
 - `src/store.ts` — Zustand local-first store + extension registry
 - `src/components/` — Grid, WidgetShell, Launcher, StatusBar
 - `src/widgets/` — Live prototypes of the five packs
+- `src/sdk/` — **Full TypeScript SDK** (manifest types, event bus, registry, runtime bridges)
+
+## TypeScript SDK
+
+The SDK lives in `src/sdk/` and is the canonical way to build extensions and interact with the host.
+
+```ts
+import {
+  extensionRegistry,
+  omniBus,
+  createRuntimeBridge,
+  type OmniExtensionManifest,
+} from './sdk';
+
+const manifest: OmniExtensionManifest = { /* ... */ };
+extensionRegistry.register(manifest);
+
+omniBus.on('ai/agent-result', (payload) => {
+  console.log(payload.data);
+});
+
+omniBus.emit({
+  type: 'ai/agent-task',
+  data: { prompt: 'analyze this' },
+  source: 'my-widget',
+});
+```
+
+Key modules:
+- `types.ts` — Complete manifest, payload, permission, and bridge types
+- `event-bus.ts` — Typed Cross-Talk bus with history
+- `extension-registry.ts` — Registration, status, and permission grants
+- `runtime.ts` — Mock and WebSocket bridges for Python/C++/WASM workers
+- `index.ts` — Barrel export
+- `example.ts` — Working usage example
 
 This is a functional, runnable realization of the unified Omni-Grid Host. Extend any widget or add new manifests to integrate additional repositories.
