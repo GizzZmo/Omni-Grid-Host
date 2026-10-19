@@ -12,7 +12,7 @@ export const MatrixRain: React.FC = () => {
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$+-*/=%"\\'#&_(),.;:?!\\\\|{}<>[]^~';
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$+-*/=%\"\\'#&_(),.;:?!\\\\|{}<>[]^~";
     const charArr = chars.split('');
 
     const fontSize = 14;
