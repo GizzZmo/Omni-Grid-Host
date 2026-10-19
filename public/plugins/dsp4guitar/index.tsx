@@ -20,6 +20,9 @@ const PRESETS: GuitarPreset[] = [
 export default function DSP4GuitarWidget({ bus }: OmniWidgetHostProps) {
   const [engineReady, setEngineReady] = useState(false);
   const [liveInputActive, setLiveInputActive] = useState(false);
+  const [inputDevices, setInputDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
+  const [inputError, setInputError] = useState<string>('');
   const [rmsLevel, setRmsLevel] = useState(0);
   const [lastMidiEvent, setLastMidiEvent] = useState<string>('Waiting for TABFRET / WebMIDI...');
   const [params, setParams] = useState<GuitarPreset>(PRESETS[0]);
@@ -29,6 +32,8 @@ export default function DSP4GuitarWidget({ bus }: OmniWidgetHostProps) {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
 
   const initAudioEngine = async () => {
     if (audioCtxRef.current) return;
@@ -52,16 +57,59 @@ export default function DSP4GuitarWidget({ bus }: OmniWidgetHostProps) {
     startVisualizerLoop();
   };
 
+  useEffect(() => {
+    const loadDevices = async () => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const inputs = devices.filter(d => d.kind === 'audioinput');
+        setInputDevices(inputs);
+        if (inputs.length && !selectedDeviceId) setSelectedDeviceId(inputs[0].deviceId);
+      } catch { /* permission pending */ }
+    };
+    loadDevices();
+    navigator.mediaDevices.addEventListener('devicechange', loadDevices);
+    return () => navigator.mediaDevices.removeEventListener('devicechange', loadDevices);
+  }, [selectedDeviceId]);
+
+  const stopLiveInput = () => {
+    sourceRef.current?.disconnect();
+    sourceRef.current = null;
+    streamRef.current?.getTracks().forEach(t => t.stop());
+    streamRef.current = null;
+    setLiveInputActive(false);
+    setInputError('');
+  };
+
   const toggleLiveGuitarInput = async () => {
+    if (liveInputActive) { stopLiveInput(); return; }
     if (!audioCtxRef.current || !workletNodeRef.current) await initAudioEngine();
     const ctx = audioCtxRef.current!;
-    if (liveInputActive) { setLiveInputActive(false); return; }
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 },
-    });
-    const micSource = ctx.createMediaStreamSource(stream);
-    micSource.connect(workletNodeRef.current!);
-    setLiveInputActive(true);
+    const worklet = workletNodeRef.current!;
+    if (ctx.state === 'suspended') await ctx.resume();
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+          channelCount: 1,
+          sampleRate: 48000,
+        },
+      });
+      const micSource = ctx.createMediaStreamSource(stream);
+      micSource.connect(worklet);
+      streamRef.current = stream;
+      sourceRef.current = micSource;
+      setLiveInputActive(true);
+      setInputError('');
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      setInputDevices(devices.filter(d => d.kind === 'audioinput'));
+    } catch (err: any) {
+      setInputError(err?.message || 'Microphone access denied');
+      setLiveInputActive(false);
+    }
   };
 
   useEffect(() => {
@@ -73,6 +121,7 @@ export default function DSP4GuitarWidget({ bus }: OmniWidgetHostProps) {
     });
     return () => {
       unsubscribe();
+      stopLiveInput();
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       audioCtxRef.current?.close();
     };
@@ -111,13 +160,19 @@ export default function DSP4GuitarWidget({ bus }: OmniWidgetHostProps) {
   return (
     <div className="flex flex-col h-full p-3 bg-slate-950 text-slate-100 font-mono text-xs gap-3 select-none">
       <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <button onClick={initAudioEngine} className={`px-2.5 py-1 rounded font-bold transition ${
             engineReady ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/50' : 'bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 hover:bg-cyan-500/30'
           }`}>{engineReady ? 'DSP ONLINE (48kHz)' : 'ARM WASM DSP'}</button>
           <button onClick={toggleLiveGuitarInput} className={`px-2.5 py-1 rounded transition border ${
             liveInputActive ? 'bg-rose-500/20 text-rose-300 border-rose-500/50 animate-pulse' : 'bg-slate-900 text-slate-400 border-slate-700 hover:text-slate-200'
           }`}>{liveInputActive ? 'HI-Z INPUT ACTIVE' : 'Enable Guitar Input'}</button>
+          {inputDevices.length > 1 && (
+            <select value={selectedDeviceId} onChange={(e) => { setSelectedDeviceId(e.target.value); if (liveInputActive) stopLiveInput(); }} className="bg-slate-900 border border-slate-700 rounded px-2 py-1 text-[10px] text-slate-300 max-w-[140px]" title="Audio input device">
+              {inputDevices.map(d => <option key={d.deviceId} value={d.deviceId}>{d.label || `Input ${d.deviceId.slice(0, 6)}`}</option>)}
+            </select>
+          )}
+          {inputError && <span className="text-rose-400 text-[10px]">{inputError}</span>}
         </div>
         <select value={params.name} onChange={(e) => {
           const found = PRESETS.find((p) => p.name === e.target.value);
