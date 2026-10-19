@@ -1,33 +1,63 @@
-@import "tailwindcss";
+/* Omni-Grid aesthetics — ported from Omni-Grid-2.0 */
 
-@theme {
-  --color-cyber-bg: #0a0a0f;
-  --color-cyber-panel: #12121a;
-  --color-cyber-accent: #00f0ff;
-  --color-cyber-magenta: #ff00aa;
-  --color-cyber-green: #00ff88;
+:root {
+  --color-bg: #0f0518;
+  --color-surface: #1a0b2e;
+  --color-primary: #d946ef;
+  --color-secondary: #8b5cf6;
+  --color-text: #e2e8f0;
+  --color-accent: #06b6d4;
+  --font-body: 'Share Tech Mono', ui-monospace, monospace;
+  --font-display: 'Orbitron', sans-serif;
+  --font-gothic: 'UnifrakturMaguntia', cursive;
+  --radius: 0.25rem;
 }
 
 body {
-  background: #0a0a0f;
-  color: #e0e0ff;
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  margin: 0;
-  overflow: hidden;
+  font-family: var(--font-body);
+  background-color: var(--color-bg);
+  color: var(--color-text);
 }
 
-.cyber-border {
-  border: 1px solid rgba(0, 240, 255, 0.3);
-  box-shadow: 0 0 12px rgba(0, 240, 255, 0.1);
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
 }
 
-.scanline {
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.15),
-    rgba(0, 0, 0, 0.15) 1px,
-    transparent 1px,
-    transparent 2px
-  );
+.font-gothic {
+  font-family: var(--font-gothic);
+}
+
+.scanlines::before {
+  content: ' ';
+  display: block;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
+  background-size: 100% 4px;
+  z-index: 50;
   pointer-events: none;
+  opacity: 0.12;
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); }
+::-webkit-scrollbar-thumb { background: var(--color-primary); border-radius: 2px; }
+
+@keyframes glitch {
+  0% { transform: translate(0); }
+  20% { transform: translate(-2px, 2px); }
+  40% { transform: translate(-2px, -2px); }
+  60% { transform: translate(2px, 2px); }
+  80% { transform: translate(2px, -2px); }
+  100% { transform: translate(0); }
+}
+
+.hover-glitch:hover {
+  animation: glitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: rgba(217, 70, 239, 0.12) !important;
+  border: 1px dashed var(--color-primary) !important;
+  box-shadow: 0 0 15px var(--color-primary);
 }
