@@ -1,21 +1,34 @@
+import { useState } from 'react';
 import { useOmniStore } from './store';
+import { MatrixRain } from './components/MatrixRain';
 import { GridContainer } from './components/GridContainer';
-import { Launcher } from './components/Launcher';
+import { PluginLauncher } from './components/PluginLauncher';
 import { StatusBar } from './components/StatusBar';
+import { SettingsPanel } from './components/SettingsPanel';
+import { useSettingsStore } from './store/settingsStore';
 
 export default function App() {
   const theme = useOmniStore(s => s.theme);
   const locked = useOmniStore(s => s.locked);
+  const provider = useSettingsStore(s => s.provider);
+  const hasKey = useSettingsStore(s => !!s.apiKey);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
-    <div className={`h-screen w-screen flex flex-col bg-cyber-bg text-white ${theme}`}>
+    <div className={`h-screen w-screen flex flex-col bg-cyber-bg text-white ${theme} scanlines relative`}>
+      <MatrixRain />
       <div className="scanline absolute inset-0 z-50 pointer-events-none" />
       <header className="h-14 flex items-center justify-between px-6 border-b border-cyan-500/30 bg-black/40 backdrop-blur">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-cyan-400 rounded-sm flex items-center justify-center font-bold text-black">OG</div>
           <h1 className="text-xl font-bold tracking-widest text-cyan-400">OMNI-GRID <span className="text-magenta-400">HOST 3.0</span></h1>
         </div>
-        <Launcher />
+        <div className="flex items-center gap-3">
+          <PluginLauncher />
+          <button onClick={() => setSettingsOpen(true)} className="px-2 py-1 rounded bg-slate-900/80 border border-cyan-500/30 text-cyan-300 text-xs hover:bg-cyan-500/10" title="AI Provider & API Key">
+            {hasKey ? `⚙ ${provider}` : '⚙ Settings'}
+          </button>
+        </div>
       </header>
       <main className="flex-1 relative overflow-hidden">
         <div className={locked ? 'blur-md pointer-events-none select-none' : ''}>
@@ -31,6 +44,7 @@ export default function App() {
         )}
       </main>
       <StatusBar />
+      <SettingsPanel open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </div>
   );
 }
