@@ -1,0 +1,11 @@
+{
+  "id": "gizzzmo.system.phase8",
+  "name": "Phase 8 Quantum-Resistant",
+  "version": "8.0.0",
+  "repository": "https://github.com/GizzZmo/Omni-Grid-Host",
+  "category": "SYSTEM",
+  "isolation": "native-esm",
+  "entryPoint": "/plugins/phase8-pqc/index.js",
+  "defaultLayout": { "w": 6, "h": 5, "minW": 4, "minH": 4 },
+  "crossTalk": { "accepts": [], "emits": [] }
+}

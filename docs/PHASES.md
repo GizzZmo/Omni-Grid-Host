@@ -21,5 +21,8 @@ Autonomy mode, adaptive weights, learning signals, Phase 6 widget.
 ## Phase 7 — Self-Healing and Fault Tolerance ✅
 Health probes, circuit breakers, automatic recovery, fault injection, Phase 7 widget.
 
-## Future (Phase 8+)
-Real HoverMind OCR via Tauri, signed manifests, multi-node mesh, encrypted workspace export, deeper RL policies.
+## Phase 8 — Quantum-Resistant Encryption ✅
+Hybrid classical + simulated PQC (Kyber/Dilithium/SPHINCS), keygen, rotation, encrypt/decrypt, sign/verify, Phase 8 widget.
+
+## Future (Phase 9+)
+Real Kyber/Dilithium WASM, signed plugin manifests, multi-node mesh, encrypted workspace export, deeper RL policies.
