@@ -31,10 +31,52 @@ yarn dev
 # Open http://localhost:5173
 ```
 
-## Next Evolution Steps (matching blueprint phases)
+## Phase 1 Daemon
 
-- **Phase 1**: Replace mock status with real WebSocket router in `omnigrid_server.cpp` + Python FastAPI worker supervisor
-- **Phase 2**: Emscripten/CMake WASM AudioWorklet for DSP4Guitar + Frequalizer
+A Node.js WebSocket bus + process supervisor is included:
+
+```bash
+npm run daemon
+# → ws://127.0.0.1:8765
+# → http://127.0.0.1:8765/health
+```
+
+Control messages:
+- `{ "type": "system/spawn", "data": { "id": "python", "command": "python3", "args": ["server/workers/unified_sidecar.py"] } }`
+- `{ "type": "system/stop", "data": { "id": "python" } }`
+
+All other messages are relayed as Cross-Talk.
+
+## Tauri Host Skeleton
+
+A minimal Tauri 2 skeleton wraps the React app:
+
+```bash
+npm install -D @tauri-apps/cli
+npm run tauri:dev
+```
+
+The skeleton lives in `src-tauri/`. The process manager can later be moved into the Rust backend or kept as a sidecar.
+
+## Phase 2 — AudioWorklet DSP
+
+A live AudioWorklet processor is now mounted in the Sonic Rack widget:
+
+- `public/worklets/omni-dsp-processor.js` — gain + one-pole low-pass on the audio thread
+- Sonic Rack starts a test tone through the worklet, shows a live peak meter, and exposes gain/cutoff controls
+- Emits `audio/pcm` events on the Phase 1 bus
+
+```bash
+npm run dev:full   # daemon + Vite
+# Open Sonic Rack → Start DSP
+```
+
+Next concrete step: replace the JS processor with an Emscripten-compiled DSP4Guitar / Frequalizer core.
+
+## Roadmap
+
+- **Phase 1**: WebSocket daemon + process supervisor (done)
+- **Phase 2**: AudioWorklet DSP path (proof-of-concept done; WASM port next)
 - **Phase 3**: Live pcap stream into SecOps tile + Face-Recon webcam lock
 - Desktop packaging: Tauri (preferred) or Electron host wrapping this shell
 
