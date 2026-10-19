@@ -1,7 +1,7 @@
 // src/store/pluginRegistryStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import React from 'react';
+import { localPluginMap } from '../plugins';
 import { OmniPluginManifest, OmniWidgetHostProps } from '../types/plugin-sdk';
 
 export interface ActiveWidgetInstance {
@@ -16,6 +16,7 @@ interface PluginRegistryState {
   registerManifest: (manifest: OmniPluginManifest) => void;
   spawnWidget: (pluginId: string, coords?: { x: number; y: number }) => string | null;
   closeWidget: (instanceId: string) => void;
+  syncInstalledPlugins: () => Promise<void>;
 }
 
 const componentCache = new Map<string, React.ComponentType<OmniWidgetHostProps>>();
@@ -23,26 +24,26 @@ const componentCache = new Map<string, React.ComponentType<OmniWidgetHostProps>>
 export async function loadNativePluginComponent(
   manifest: OmniPluginManifest
 ): Promise<React.ComponentType<OmniWidgetHostProps>> {
+  if (localPluginMap[manifest.id]) {
+    const Component = localPluginMap[manifest.id];
+    componentCache.set(manifest.id, Component);
+    return Component;
+  }
   if (componentCache.has(manifest.id)) {
     return componentCache.get(manifest.id)!;
   }
-
   const isLocalOrTrusted =
     manifest.entryPoint.startsWith('/plugins/') ||
     manifest.entryPoint.startsWith('./') ||
     manifest.entryPoint.startsWith('http://localhost:');
-
   if (!isLocalOrTrusted) {
     throw new Error(`[PluginLoader] Untrusted entryPoint blocked for native-esm: ${manifest.entryPoint}`);
   }
-
   const module = await import(/* @vite-ignore */ manifest.entryPoint);
   const Component = module.default || module.OmniWidget;
-
   if (!Component) {
     throw new Error(`[PluginLoader] Plugin "${manifest.id}" did not export a default React component.`);
   }
-
   componentCache.set(manifest.id, Component);
   return Component;
 }
@@ -60,86 +61,36 @@ export const usePluginRegistry = create<PluginRegistryState>()(
           isolation: 'native-esm',
           entryPoint: '/plugins/dsp4guitar/index.js',
           defaultLayout: { w: 6, h: 4, minW: 4, minH: 3 },
-          sidecar: {
-            type: 'cpp-wasm',
-            endpoint: '/wasm/dsp4guitar_processor.wasm',
-            permissions: ['usb-audio', 'web-midi'],
-          },
-          crossTalk: {
-            accepts: ['audio/midi', 'audio/pcm-stream', 'ai/prompt'],
-            emits: ['audio/pcm-stream'],
-          },
-        },
-        'gizzzmo.audio.tabfret': {
-          id: 'gizzzmo.audio.tabfret',
-          name: 'TABFRET MIDI Visualizer',
-          version: '1.4.0',
-          repository: 'https://github.com/GizzZmo/TABFRET',
-          category: 'AUDIO',
-          isolation: 'native-esm',
-          entryPoint: '/plugins/tabfret/index.js',
-          defaultLayout: { w: 6, h: 3, minW: 4, minH: 2 },
-          crossTalk: {
-            accepts: ['audio/midi'],
-            emits: ['audio/midi'],
-          },
-        },
-        'gizzzmo.secops.autosec': {
-          id: 'gizzzmo.secops.autosec',
-          name: 'AutoSec Threat Command',
-          version: '3.0.0',
-          repository: 'https://github.com/GizzZmo/AutoSec',
-          category: 'SECOPS',
-          isolation: 'sandboxed-iframe',
-          entryPoint: '/plugins/autosec/index.html',
-          defaultLayout: { w: 6, h: 5, minW: 4, minH: 4 },
-          sidecar: {
-            type: 'cpp-daemon',
-            endpoint: 'ws://localhost:1234/ipc/pcap-stream',
-            permissions: ['pcap-net'],
-          },
-          crossTalk: {
-            accepts: ['sec/pcap-packet', 'sec/biometric-auth'],
-            emits: ['ai/agent-task', 'text/plain'],
-          },
+          sidecar: { type: 'cpp-wasm', endpoint: '/wasm/dsp4guitar_processor.wasm', permissions: ['usb-audio', 'web-midi'] },
+          crossTalk: { accepts: ['audio/midi', 'audio/pcm-stream', 'ai/prompt'], emits: ['audio/pcm-stream'] },
         },
       },
       activeInstances: [],
-
-      registerManifest: (manifest) =>
-        set((state) => ({
-          manifests: { ...state.manifests, [manifest.id]: manifest },
-        })),
-
-      spawnWidget: (pluginId, coords = { x: 0, y: 0 }) => {
+      registerManifest: (manifest) => set(s => ({ manifests: { ...s.manifests, [manifest.id]: manifest } })),
+      spawnWidget: (pluginId, coords) => {
         const manifest = get().manifests[pluginId];
         if (!manifest) return null;
-
-        const instanceId = `${pluginId}::${crypto.randomUUID().slice(0, 8)}`;
-        const newInstance: ActiveWidgetInstance = {
+        const instanceId = `${pluginId}-${Date.now()}`;
+        const newInstance = {
           instanceId,
           pluginId,
-          layout: {
-            x: coords.x,
-            y: coords.y,
-            w: manifest.defaultLayout.w,
-            h: manifest.defaultLayout.h,
-          },
+          layout: { x: coords?.x ?? 0, y: coords?.y ?? 0, w: manifest.defaultLayout.w, h: manifest.defaultLayout.h },
         };
-
-        set((state) => ({
-          activeInstances: [...state.activeInstances, newInstance],
-        }));
+        set(s => ({ activeInstances: [...s.activeInstances, newInstance] }));
         return instanceId;
       },
-
-      closeWidget: (instanceId) =>
-        set((state) => ({
-          activeInstances: state.activeInstances.filter((i) => i.instanceId !== instanceId),
-        })),
+      closeWidget: (instanceId) => set(s => ({ activeInstances: s.activeInstances.filter(i => i.instanceId !== instanceId) })),
+      syncInstalledPlugins: async () => {
+        try {
+          const res = await fetch('/plugins/registry.json');
+          if (!res.ok) return;
+          const discovered: Record<string, OmniPluginManifest> = await res.json();
+          set(s => ({ manifests: { ...s.manifests, ...discovered } }));
+        } catch (err) {
+          console.warn('[PluginRegistry] No external /plugins/registry.json found yet:', err);
+        }
+      },
     }),
-    {
-      name: 'omnigrid-plugin-registry-v2',
-    }
+    { name: 'omnigrid-plugin-registry-v2' }
   )
 );
