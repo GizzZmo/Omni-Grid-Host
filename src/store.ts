@@ -6,10 +6,12 @@ interface OmniState {
   layouts: WidgetLayout[];
   visibleWidgets: string[];
   theme: 'cyber' | 'matrix' | 'void';
+  locked: boolean;
   crossTalkBus: CrossTalkPayload[];
   extensions: OmniExtensionManifest[];
   setLayouts: (layouts: WidgetLayout[]) => void;
   toggleWidget: (id: string) => void;
+  setLocked: (locked: boolean) => void;
   emitCrossTalk: (payload: Omit<CrossTalkPayload, 'timestamp'>) => void;
   setTheme: (theme: OmniState['theme']) => void;
 }
@@ -71,6 +73,7 @@ export const useOmniStore = create<OmniState>()(
       ],
       visibleWidgets: ['neural', 'sonic', 'secops', 'dev'],
       theme: 'cyber',
+      locked: false,
       crossTalkBus: [],
       extensions: defaultExtensions,
       setLayouts: (layouts) => set({ layouts }),
@@ -79,6 +82,7 @@ export const useOmniStore = create<OmniState>()(
           ? s.visibleWidgets.filter(w => w !== id)
           : [...s.visibleWidgets, id]
       })),
+      setLocked: (locked) => set({ locked }),
       emitCrossTalk: (payload) => set((s) => ({
         crossTalkBus: [...s.crossTalkBus.slice(-20), { ...payload, timestamp: Date.now() }]
       })),
