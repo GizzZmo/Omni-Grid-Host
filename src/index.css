@@ -56,6 +56,19 @@ h1, h2, h3, .font-display {
   animation: glitch 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) both infinite;
 }
 
+.cyber-border {
+  border: 1px solid rgba(6, 182, 212, 0.35);
+  box-shadow: 0 0 12px rgba(6, 182, 212, 0.08), inset 0 0 20px rgba(0, 0, 0, 0.4);
+}
+
+.cyber-panel {
+  background: rgba(15, 5, 24, 0.85);
+}
+
+.bg-cyber-bg {
+  background-color: #0f0518;
+}
+
 .react-grid-item.react-grid-placeholder {
   background: rgba(217, 70, 239, 0.12) !important;
   border: 1px dashed var(--color-primary) !important;

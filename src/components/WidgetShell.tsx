@@ -1,4 +1,3 @@
-import { X } from 'lucide-react';
 import { useOmniStore } from '../store';
 
 interface Props {
@@ -11,14 +10,12 @@ export function WidgetShell({ title, id, children }: Props) {
   const toggleWidget = useOmniStore(s => s.toggleWidget);
 
   return (
-    <div className="h-full flex flex-col">
-      <div className="widget-drag h-8 flex items-center justify-between px-3 bg-black/50 border-b border-cyan-500/20 cursor-move">
-        <span className="text-xs font-bold tracking-wider text-cyan-300">{title}</span>
-        <button onClick={() => toggleWidget(id)} className="text-red-400 hover:text-red-300">
-          <X size={14} />
-        </button>
+    <div className="h-full flex flex-col bg-slate-950/80">
+      <div className="widget-drag h-7 flex items-center justify-between px-2.5 bg-slate-900/90 border-b border-cyan-500/30 cursor-move shrink-0">
+        <span className="text-[10px] font-bold tracking-widest text-cyan-300 uppercase">{title}</span>
+        <button onClick={() => toggleWidget(id)} className="text-slate-500 hover:text-rose-400 text-xs leading-none px-1">×</button>
       </div>
-      <div className="flex-1 p-3 overflow-auto text-sm">
+      <div className="flex-1 p-2 overflow-auto text-xs min-h-0">
         {children}
       </div>
     </div>

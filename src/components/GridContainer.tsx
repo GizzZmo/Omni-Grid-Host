@@ -43,10 +43,11 @@ export function GridContainer() {
       layouts={{ lg: allLayouts }}
       breakpoints={{ lg: 1200, md: 996, sm: 768 }}
       cols={{ lg: 12, md: 10, sm: 6 }}
-      rowHeight={30}
+      rowHeight={28}
       onLayoutChange={onLayoutChange}
       draggableHandle=".widget-drag"
-      margin={[8, 8]}
+      margin={[6, 6]}
+      containerPadding={[8, 8]}
     >
       {visibleWidgets.map(id => {
         const Widget = widgetMap[id];
@@ -64,7 +65,7 @@ export function GridContainer() {
         const manifest = manifests[inst.pluginId];
         if (!manifest) return null;
         return (
-          <div key={inst.instanceId} className="h-full">
+          <div key={inst.instanceId} className="h-full cyber-border rounded-lg overflow-hidden">
             <OmniPluginHost
               instanceId={inst.instanceId}
               manifest={manifest}
