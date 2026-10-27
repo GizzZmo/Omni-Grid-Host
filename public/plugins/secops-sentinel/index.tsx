@@ -15,7 +15,6 @@ export default function SecOpsSentinelWidget({ instanceId, bus }: OmniWidgetHost
   const [agentPlaybook, setAgentPlaybook] = useState<string>('[AUTOSEC_RESPONDER] Standing by for high-anomaly PCAP telemetry...');
   const [manualLockOverride, setManualLockOverride] = useState<boolean>(false);
   const [bytesPerSec, setBytesPerSec] = useState<number>(0);
-
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const blipsRef = useRef<RadarBlip[]>([]);
   const sweepAngleRef = useRef<number>(0);
@@ -26,7 +25,9 @@ export default function SecOpsSentinelWidget({ instanceId, bus }: OmniWidgetHost
       const pkt = envelope.payload;
       byteAccumulatorRef.current += pkt.bytes || 0;
       const hash = pkt.srcIp.split('.').reduce((acc, octet) => (acc * 31 + parseInt(octet, 10)) % 360, 0);
-      blipsRef.current.push({ id: envelope.id, angle: (hash * Math.PI) / 180, radius: Math.max(0.15, 1.0 - pkt.anomalyScore * 0.75), anomaly: pkt.anomalyScore, srcIp: pkt.srcIp, alpha: 1.0 });
+      const angleRad = (hash * Math.PI) / 180;
+      const normalizedRadius = Math.max(0.15, 1.0 - pkt.anomalyScore * 0.75);
+      blipsRef.current.push({ id: envelope.id, angle: angleRad, radius: normalizedRadius, anomaly: pkt.anomalyScore, srcIp: pkt.srcIp, alpha: 1.0 });
       if (blipsRef.current.length > 40) blipsRef.current.shift();
       setPackets((prev) => [{ ...pkt, id: envelope.id, time: envelope.timestamp }, ...prev.slice(0, 29)]);
     });
@@ -56,7 +57,8 @@ export default function SecOpsSentinelWidget({ instanceId, bus }: OmniWidgetHost
             const by = cy + Math.sin(blip.angle) * (blip.radius * maxR);
             const isCritical = blip.anomaly > 0.8;
             ctx.beginPath(); ctx.arc(bx, by, isCritical ? 4.5 : 2.5, 0, Math.PI * 2);
-            ctx.fillStyle = isCritical ? `rgba(244, 63, 94, ${blip.alpha})` : `rgba(52, 211, 153, ${blip.alpha})`; ctx.fill();
+            ctx.fillStyle = isCritical ? `rgba(244, 63, 94, ${blip.alpha})` : `rgba(52, 211, 153, ${blip.alpha})`;
+            ctx.fill();
             if (isCritical && blip.alpha > 0.4) { ctx.strokeStyle = `rgba(244, 63, 94, ${blip.alpha * 0.5})`; ctx.beginPath(); ctx.arc(bx, by, 9, 0, Math.PI * 2); ctx.stroke(); }
             blip.alpha = Math.max(0, blip.alpha - 0.008);
           });
@@ -81,17 +83,15 @@ export default function SecOpsSentinelWidget({ instanceId, bus }: OmniWidgetHost
     <div className="relative flex flex-col h-full w-full p-3 bg-slate-950 text-slate-100 font-mono text-xs gap-2.5 select-none overflow-hidden">
       <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-800">
         <div className="flex items-center gap-2">
-          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-            isVaultLocked ? 'bg-rose-950/90 text-rose-400 border-rose-500/60 animate-pulse' : 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40'
-          }`}>{isVaultLocked ? 'FACE-RECON: OPERATOR ABSENT' : `VERIFIED: ${biometric.identity} (${Math.round(biometric.confidence * 100)}%)`}</span>
+          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${isVaultLocked ? 'bg-rose-950/90 text-rose-400 border-rose-500/60 animate-pulse' : 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40'}`}>{isVaultLocked ? '🔒 FACE-RECON: OPERATOR ABSENT' : `👁️ VERIFIED: ${biometric.identity} (${Math.round(biometric.confidence * 100)}%)`}</span>
           <span className="text-[10px] text-cyan-400 bg-slate-900 px-2 py-0.5 rounded border border-slate-800">PCAP STREAM: {(bytesPerSec / 1024).toFixed(1)} KB/s</span>
         </div>
-        <button onClick={() => setManualLockOverride((prev) => !prev)} className="px-2 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-[10px] transition">{manualLockOverride ? 'Override Lock' : 'Force Zero-Trust Lock'}</button>
+        <button onClick={() => setManualLockOverride((prev) => !prev)} className="px-2 py-0.5 rounded bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-[10px] transition">{manualLockOverride ? '🔓 Override Lock' : '🛡️ Force Zero-Trust Lock'}</button>
       </div>
       <div className={`grid grid-cols-1 md:grid-cols-12 gap-2.5 flex-1 min-h-0 transition-all duration-300 ${isVaultLocked ? 'blur-md pointer-events-none select-none opacity-40' : ''}`}>
         <div className="md:col-span-5 flex flex-col items-center justify-center bg-slate-900/70 rounded-lg border border-slate-800 p-2 relative">
           <canvas ref={canvasRef} width={160} height={160} className="rounded-full" />
-          <div className="flex justify-between w-full text-[10px] text-slate-400 mt-1 px-1"><span className="text-emerald-400">NOMINAL</span><span className="text-rose-400">ANOMALY (&gt;0.80)</span></div>
+          <div className="flex justify-between w-full text-[10px] text-slate-400 mt-1 px-1"><span className="text-emerald-400">● NOMINAL</span><span className="text-rose-400">● ANOMALY (&gt;0.80)</span></div>
         </div>
         <div className="md:col-span-7 flex flex-col bg-slate-900/70 rounded-lg border border-slate-800 overflow-hidden">
           <div className="px-2.5 py-1 bg-slate-900 border-b border-slate-800 flex justify-between text-[10px] text-slate-400"><span>SOURCE IP → DEST</span><span>PROTO / BYTES</span><span>ACTION</span></div>
@@ -101,14 +101,10 @@ export default function SecOpsSentinelWidget({ instanceId, bus }: OmniWidgetHost
               const isHighRisk = pkt.anomalyScore > 0.8;
               const isBlocked = blockedIps.includes(pkt.srcIp);
               return (
-                <div key={pkt.id} draggable onDragStart={(e) => crossTalkBus.createDragPayload(e, instanceId, 'sec/pcap-packet', pkt)} className={`flex items-center justify-between px-2 py-1 rounded text-[11px] cursor-grab ${
-                  isHighRisk ? 'bg-rose-950/40 border border-rose-500/40 text-rose-200' : 'bg-slate-950/60 text-slate-300'
-                }`}>
+                <div key={pkt.id} draggable onDragStart={(e) => crossTalkBus.createDragPayload(e, instanceId, 'sec/pcap-packet', pkt)} className={`flex items-center justify-between px-2 py-1 rounded text-[11px] cursor-grab ${isHighRisk ? 'bg-rose-950/40 border border-rose-500/40 text-rose-200' : 'bg-slate-950/60 text-slate-300'}`}>
                   <div className="truncate max-w-[150px]"><span className={isHighRisk ? 'text-rose-400 font-bold' : 'text-cyan-300'}>{pkt.srcIp}</span><span className="text-slate-500"> → {pkt.dstIp}</span></div>
                   <div className="text-[10px] text-slate-400">{pkt.protocol} · {pkt.bytes}B · <span className={isHighRisk ? 'text-rose-400 font-bold' : 'text-emerald-400'}>{(pkt.anomalyScore * 100).toFixed(0)}%</span></div>
-                  <button onClick={() => quarantineIp(pkt.srcIp)} disabled={isBlocked} className={`px-1.5 py-0.5 rounded text-[10px] transition ${
-                    isBlocked ? 'bg-slate-800 text-slate-500' : 'bg-rose-500/20 border border-rose-500/50 text-rose-300 hover:bg-rose-500/40'
-                  }`}>{isBlocked ? 'DROP ACTIVE' : 'BLOCK'}</button>
+                  <button onClick={() => quarantineIp(pkt.srcIp)} disabled={isBlocked} className={`px-1.5 py-0.5 rounded text-[10px] transition ${isBlocked ? 'bg-slate-800 text-slate-500' : 'bg-rose-500/20 border border-rose-500/50 text-rose-300 hover:bg-rose-500/40'}`}>{isBlocked ? 'DROP ACTIVE' : '⚡ BLOCK'}</button>
                 </div>
               );
             })}
@@ -117,7 +113,7 @@ export default function SecOpsSentinelWidget({ instanceId, bus }: OmniWidgetHost
       </div>
       <div draggable onDragStart={(e) => crossTalkBus.createDragPayload(e, instanceId, 'text/plain', agentPlaybook)} className="p-2 rounded bg-slate-900/90 border border-cyan-500/30 flex items-center justify-between gap-2 cursor-grab" title="Drag this remediation playbook into Ai_shell or CyberEditor">
         <div className="truncate text-[11px] text-cyan-300"><span className="text-purple-400 font-bold mr-1.5">[AGENT PLAYBOOK]</span>{agentPlaybook}</div>
-        <span className="text-[10px] text-slate-400 shrink-0">Drag to Ai_shell</span>
+        <span className="text-[10px] text-slate-400 shrink-0">⇄ Drag to Ai_shell</span>
       </div>
       {isVaultLocked && (
         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 text-center">
