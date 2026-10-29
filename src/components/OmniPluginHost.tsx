@@ -121,7 +121,7 @@ export const OmniPluginHost: React.FC<Props> = ({ instanceId, manifest, onClose 
           : 'border-slate-800 hover:border-slate-700'
       }`}
     >
-      <div className="flex items-center justify-between px-3 py-1.5 bg-slate-900/80 border-b border-slate-800 text-xs font-mono select-none cursor-move">
+      <div className="widget-drag flex items-center justify-between px-3 py-1.5 bg-slate-900/80 border-b border-slate-800 text-xs font-mono select-none cursor-move [.grid-locked_&]:cursor-default">
         <div className="flex items-center gap-2">
           <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-slate-200 font-semibold tracking-wider">{manifest.name}</span>

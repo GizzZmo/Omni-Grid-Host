@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { useOmniStore } from '../store';
 import { usePluginRegistry } from '../store/pluginRegistryStore';
 import ReactGridLayout from 'react-grid-layout';
@@ -21,9 +22,12 @@ const widgetMap: Record<string, React.FC> = {
 
 export function GridContainer() {
   const { layouts, setLayouts, visibleWidgets } = useOmniStore();
+  const gridLocked = useOmniStore(s => s.gridLocked);
   const activeInstances = usePluginRegistry(s => s.activeInstances);
   const manifests = usePluginRegistry(s => s.manifests);
   const closeWidget = usePluginRegistry(s => s.closeWidget);
+  const fitRef = useRef<HTMLDivElement>(null);
+  const [rowHeight, setRowHeight] = useState(28);
 
   const onLayoutChange = (next: Array<{ i: string; x: number; y: number; w: number; h: number }>) => {
     const coreIds = new Set(visibleWidgets);
@@ -49,14 +53,35 @@ export function GridContainer() {
   }));
 
   const allLayouts = [...layouts, ...pluginLayouts];
+  const rows = allLayouts.reduce((max, item) => Math.max(max, item.y + item.h), 1);
+
+  const layoutSignature = allLayouts.map((item) => `${item.i}:${item.y}:${item.h}`).join('|');
+
+  useEffect(() => {
+    const el = fitRef.current;
+    if (!el) return;
+    const fit = () => {
+      const available = el.clientHeight - 16;
+      const margin = 6;
+      const next = Math.max(20, Math.floor((available - margin * Math.max(0, rows - 1)) / rows));
+      setRowHeight((prev) => (prev === next ? prev : next));
+    };
+    fit();
+    const observer = new ResizeObserver(fit);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [rows, layoutSignature]);
 
   return (
+    <div ref={fitRef} className={`h-full min-h-0 overflow-auto ${gridLocked ? 'grid-locked' : ''}`}>
     <ResponsiveGrid
       className="layout"
       layouts={{ lg: allLayouts }}
       breakpoints={{ lg: 1200, md: 996, sm: 480 }}
       cols={{ lg: 12, md: 12, sm: 12 }}
-      rowHeight={28}
+      rowHeight={rowHeight}
+      isDraggable={!gridLocked}
+      isResizable={!gridLocked}
       onLayoutChange={onLayoutChange}
       draggableHandle=".widget-drag"
       margin={[6, 6]}
@@ -66,7 +91,7 @@ export function GridContainer() {
         const Widget = widgetMap[id];
         if (!Widget) return null;
         return (
-          <div key={id} className="cyber-border rounded-lg overflow-hidden bg-cyber-panel/80 backdrop-blur">
+          <div key={id} className="h-full min-h-0 cyber-border rounded-lg overflow-hidden bg-cyber-panel/80 backdrop-blur">
             <WidgetShell title={id.toUpperCase()} id={id}>
               <Widget />
             </WidgetShell>
@@ -78,7 +103,7 @@ export function GridContainer() {
         const manifest = manifests[inst.pluginId];
         if (!manifest) return null;
         return (
-          <div key={inst.instanceId} className="h-full">
+          <div key={inst.instanceId} className="h-full min-h-0">
             <OmniPluginHost
               instanceId={inst.instanceId}
               manifest={manifest}
@@ -88,5 +113,6 @@ export function GridContainer() {
         );
       })}
     </ResponsiveGrid>
+    </div>
   );
 }

@@ -32,6 +32,8 @@ export default function App() {
   const theme = useOmniStore(s => s.theme);
   const locked = useOmniStore(s => s.locked);
   const setLocked = useOmniStore(s => s.setLocked);
+  const gridLocked = useOmniStore(s => s.gridLocked);
+  const setGridLocked = useOmniStore(s => s.setGridLocked);
   const provider = useSettingsStore(s => s.provider);
   const hasKey = useSettingsStore(s => !!s.apiKey);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -65,6 +67,17 @@ export default function App() {
           <h1 className="text-xl font-bold tracking-widest text-cyan-400">OMNI-GRID <span className="text-magenta-400">HOST 3.0</span></h1>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            onClick={() => setGridLocked(!gridLocked)}
+            className={`px-2 py-1 rounded text-xs font-bold tracking-wide border ${
+              gridLocked
+                ? 'bg-fuchsia-500 text-black border-fuchsia-300'
+                : 'bg-slate-900/80 text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/10'
+            }`}
+            title={gridLocked ? 'Grid is locked. Click to move tiles.' : 'Lock the grid so tiles stay put.'}
+          >
+            {gridLocked ? 'Grid locked' : 'Grid lock'}
+          </button>
           <a
             href="/download/Omni-Grid-Host.zip"
             download="Omni-Grid-Host.zip"
@@ -83,8 +96,8 @@ export default function App() {
           </button>
         </div>
       </header>
-      <main className="flex-1 relative overflow-auto">
-        <div className={locked ? 'blur-md pointer-events-none select-none' : ''}>
+      <main className="flex-1 relative overflow-hidden min-h-0">
+        <div className={`h-full min-h-0 ${locked ? 'blur-md pointer-events-none select-none' : ''}`}>
           <GridContainer />
         </div>
         {locked && (
