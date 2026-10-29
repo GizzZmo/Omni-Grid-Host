@@ -9,8 +9,14 @@ export const MatrixRain: React.FC = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
+    let width = 0;
+    let height = 0;
+    const fit = () => {
+      const parent = canvas.parentElement;
+      width = canvas.width = parent?.clientWidth || window.innerWidth;
+      height = canvas.height = parent?.clientHeight || window.innerHeight;
+    };
+    fit();
 
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$+-*/=%\"\\'#&_(),.;:?!\\\\|{}<>[]^~";
     const charArr = chars.split('');
@@ -36,10 +42,7 @@ export const MatrixRain: React.FC = () => {
     };
 
     const interval = setInterval(draw, 33);
-    const handleResize = () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
-    };
+    const handleResize = () => fit();
     window.addEventListener('resize', handleResize);
 
     return () => {
@@ -48,5 +51,5 @@ export const MatrixRain: React.FC = () => {
     };
   }, []);
 
-  return <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-0 opacity-40" />;
+  return <canvas ref={canvasRef} className="absolute inset-0 h-full w-full max-w-full pointer-events-none z-0 opacity-40" />;
 };

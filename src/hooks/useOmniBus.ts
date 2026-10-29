@@ -5,7 +5,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 
-const ENDPOINT = 'ws://127.0.0.1:8765';
+import { linkSidecarEndpoint } from '../lib/sidecars';
 
 export interface BusMessage {
   type: string;
@@ -21,35 +21,42 @@ export function useOmniBus(source: string) {
   const [lastMessage, setLastMessage] = useState<BusMessage | null>(null);
 
   useEffect(() => {
-    let ws: WebSocket;
-    let retry: number;
+    let ws: WebSocket | undefined;
+    let retry: number | undefined;
+    let alive = true;
+    const endpoint = linkSidecarEndpoint('ws://127.0.0.1:8765');
 
     const connect = () => {
+      if (!alive) return;
       try {
-        ws = new WebSocket(ENDPOINT);
+        ws = new WebSocket(endpoint);
         wsRef.current = ws;
 
-        ws.onopen = () => setConnected(true);
+        ws.onopen = () => {
+          if (alive) setConnected(true);
+        };
         ws.onclose = () => {
+          if (!alive) return;
           setConnected(false);
           retry = window.setTimeout(connect, 2000);
         };
-        ws.onerror = () => ws.close();
+        ws.onerror = () => ws?.close();
         ws.onmessage = (ev) => {
           try {
             const msg = JSON.parse(ev.data) as BusMessage;
-            setLastMessage(msg);
+            if (alive) setLastMessage(msg);
           } catch {
             /* ignore */
           }
         };
       } catch {
-        retry = window.setTimeout(connect, 2000);
+        if (alive) retry = window.setTimeout(connect, 2000);
       }
     };
 
     connect();
     return () => {
+      alive = false;
       clearTimeout(retry);
       ws?.close();
     };

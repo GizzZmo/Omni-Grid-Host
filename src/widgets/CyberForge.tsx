@@ -1,5 +1,5 @@
 import { useOmniStore } from '../store';
-import { Code2, GitBranch } from 'lucide-react';
+import { Code2, GitBranch } from '../icons';
 
 export function CyberForge() {
   const emit = useOmniStore(s => s.emitCrossTalk);

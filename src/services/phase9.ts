@@ -1,12 +1,41 @@
 // src/services/phase9.ts
+// Phase 9: Self-Healing Network
+// Topology-aware mesh with redundant paths, automatic rerouting,
+// and network-level health probes.
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { usePhase5 } from './phase5';
 import { usePhase7 } from './phase7';
 
-export interface NetworkNode { id: string; name: string; type: 'core' | 'edge' | 'sidecar'; status: 'up' | 'degraded' | 'down'; latencyMs: number; load: number; }
-export interface NetworkLink { id: string; from: string; to: string; status: 'active' | 'degraded' | 'failed'; latencyMs: number; bandwidthMbps: number; isPrimary: boolean; }
-export interface RouteDecision { id: string; timestamp: number; source: string; destination: string; path: string[]; reason: string; success: boolean; }
+export interface NetworkNode {
+  id: string;
+  name: string;
+  type: 'core' | 'edge' | 'sidecar';
+  status: 'up' | 'degraded' | 'down';
+  latencyMs: number;
+  load: number;
+}
+
+export interface NetworkLink {
+  id: string;
+  from: string;
+  to: string;
+  status: 'active' | 'degraded' | 'failed';
+  latencyMs: number;
+  bandwidthMbps: number;
+  isPrimary: boolean;
+}
+
+export interface RouteDecision {
+  id: string;
+  timestamp: number;
+  source: string;
+  destination: string;
+  path: string[];
+  reason: string;
+  success: boolean;
+}
 
 interface Phase9State {
   nodes: NetworkNode[];
@@ -71,50 +100,93 @@ export const usePhase9 = create<Phase9State>()(
       links: DEFAULT_LINKS,
       routes: [],
       selfHealNetwork: true,
+
       setSelfHealNetwork: (enabled) => {
         set({ selfHealNetwork: enabled });
-        usePhase5.getState().appendAudit({ actor: 'phase9', action: enabled ? 'netheal.enable' : 'netheal.disable', target: 'mesh', severity: 'info' });
+        usePhase5.getState().appendAudit({
+          actor: 'phase9',
+          action: enabled ? 'netheal.enable' : 'netheal.disable',
+          target: 'mesh',
+          severity: 'info',
+        });
       },
+
       probeNetwork: () => {
+        const now = Date.now();
         set(s => {
           const nodes = s.nodes.map(n => {
             const fail = Math.random() < (n.status === 'down' ? 0.4 : 0.03);
-            return { ...n, status: fail ? (Math.random() > 0.5 ? 'degraded' : 'down') : 'up', latencyMs: fail ? 80 + Math.random() * 120 : 2 + Math.random() * 12, load: Math.min(1, n.load + (Math.random() - 0.5) * 0.05) };
+            return {
+              ...n,
+              status: fail ? (Math.random() > 0.5 ? 'degraded' : 'down') : 'up',
+              latencyMs: fail ? 80 + Math.random() * 120 : 2 + Math.random() * 12,
+              load: Math.min(1, n.load + (Math.random() - 0.5) * 0.05),
+            };
           });
           const links = s.links.map(l => {
             const from = nodes.find(n => n.id === l.from);
             const to = nodes.find(n => n.id === l.to);
-            if (from?.status === 'down' || to?.status === 'down') return { ...l, status: 'failed' as const };
-            if (from?.status === 'degraded' || to?.status === 'degraded') return { ...l, status: 'degraded' as const, latencyMs: l.latencyMs * 1.5 };
+            if (from?.status === 'down' || to?.status === 'down') {
+              return { ...l, status: 'failed' as const };
+            }
+            if (from?.status === 'degraded' || to?.status === 'degraded') {
+              return { ...l, status: 'degraded' as const, latencyMs: l.latencyMs * 1.5 };
+            }
             return { ...l, status: 'active' as const };
           });
           return { nodes, links };
         });
+
         if (get().selfHealNetwork) {
+          // Attempt to heal failed links if endpoints recovered
           get().links.forEach(l => {
             if (l.status === 'failed') {
               const from = get().nodes.find(n => n.id === l.from);
               const to = get().nodes.find(n => n.id === l.to);
-              if (from?.status === 'up' && to?.status === 'up') get().healLink(l.id);
+              if (from?.status === 'up' && to?.status === 'up') {
+                get().healLink(l.id);
+              }
             }
           });
         }
       },
+
       failLink: (linkId) => {
-        set(s => ({ links: s.links.map(l => l.id === linkId ? { ...l, status: 'failed' as const } : l) }));
+        set(s => ({
+          links: s.links.map(l => l.id === linkId ? { ...l, status: 'failed' as const } : l),
+        }));
         usePhase5.getState().appendAudit({ actor: 'operator', action: 'link.fail', target: linkId, severity: 'warn' });
-        usePhase7.getState().injectFault('pcap');
+        usePhase7.getState().injectFault('pcap'); // cascade example
       },
+
       healLink: (linkId) => {
-        set(s => ({ links: s.links.map(l => l.id === linkId ? { ...l, status: 'active' as const, latencyMs: 5 } : l) }));
+        set(s => ({
+          links: s.links.map(l => l.id === linkId ? { ...l, status: 'active' as const, latencyMs: 5 } : l),
+        }));
         usePhase5.getState().appendAudit({ actor: 'phase9', action: 'link.heal', target: linkId, severity: 'info' });
       },
+
       findPath: (source, dest) => bfsPath(get().links, source, dest),
+
       reroute: (source, dest) => {
         const path = get().findPath(source, dest);
-        const decision: RouteDecision = { id: `rt-${Date.now().toString(36)}`, timestamp: Date.now(), source, destination: dest, path: path || [], reason: path ? 'BFS shortest active path' : 'No path available', success: !!path };
+        const decision: RouteDecision = {
+          id: `rt-${Date.now().toString(36)}`,
+          timestamp: Date.now(),
+          source,
+          destination: dest,
+          path: path || [],
+          reason: path ? 'BFS shortest active path' : 'No path available',
+          success: !!path,
+        };
         set(s => ({ routes: [decision, ...s.routes].slice(0, 50) }));
-        usePhase5.getState().appendAudit({ actor: 'phase9', action: 'route.compute', target: `${source}->${dest}`, severity: path ? 'info' : 'warn', payload: { path } });
+        usePhase5.getState().appendAudit({
+          actor: 'phase9',
+          action: 'route.compute',
+          target: `${source}->${dest}`,
+          severity: path ? 'info' : 'warn',
+          payload: { path },
+        });
         return decision;
       },
     }),

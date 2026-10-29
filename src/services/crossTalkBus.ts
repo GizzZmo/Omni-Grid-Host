@@ -114,6 +114,36 @@ class CrossTalkEventBus {
     });
   }
 
+  public emit<T>(
+    mimeType: CrossTalkMimeType,
+    payload: T,
+    sourceWidgetId = 'omnigrid.core'
+  ): void {
+    const envelope: CrossTalkEnvelope<T> = {
+      id: crypto.randomUUID(),
+      timestamp: Date.now(),
+      sourceWidgetId,
+      targetWidgetId: '*',
+      mimeType,
+      payload,
+    };
+    this.dispatch(envelope);
+  }
+
+  public subscribe<T>(
+    mimeType: CrossTalkMimeType,
+    handler: (envelope: CrossTalkEnvelope<T>) => void
+  ): () => void {
+    if (!this.listeners.has(mimeType)) {
+      this.listeners.set(mimeType, new Set());
+    }
+    const wrapped: EnvelopeHandler = (env) => handler(env as CrossTalkEnvelope<T>);
+    this.listeners.get(mimeType)!.add(wrapped);
+    return () => {
+      this.listeners.get(mimeType)?.delete(wrapped);
+    };
+  }
+
   public createDragPayload<T>(
     e: React.DragEvent,
     sourceWidgetId: string,

@@ -1,11 +1,16 @@
 // dsp/dsp4guitar_wasm.cpp
-// Compile with Emscripten (see Makefile wasm-dsp target)
+// Compile: emcc dsp/dsp4guitar_wasm.cpp -O3 -std=c++17 -sWASM=1 -sSINGLE_FILE=1 \
+//   -sALLOW_MEMORY_GROWTH=0 -sINITIAL_MEMORY=16777216 \
+//   -sEXPORTED_FUNCTIONS='["_malloc","_free"]' \
+//   -sEXPORTED_RUNTIME_METHODS='["ccall","cwrap","HEAPF32"]' \
+//   --bind -o public/wasm/dsp4guitar_core.js
 
 #include <cmath>
 #include <cstring>
 #include <algorithm>
 #include <array>
 #include <emscripten/bind.h>
+#include <emscripten/val.h>
 
 constexpr int MAX_DELAY_SAMPLES = 96000;
 constexpr int NUM_STRINGS = 6;
@@ -60,6 +65,7 @@ private:
     std::array<float, MAX_DELAY_SAMPLES> delayBufferL{};
     std::array<float, MAX_DELAY_SAMPLES> delayBufferR{};
     std::array<KarplusVoice, NUM_STRINGS> stringVoices{};
+
     float latestRms = 0.0f;
 
 public:
@@ -91,8 +97,11 @@ public:
 
         for (int i = 0; i < numSamples; ++i) {
             float synthSum = 0.0f;
-            for (auto& voice : stringVoices) synthSum += voice.processSample();
+            for (auto& voice : stringVoices) {
+                synthSum += voice.processSample();
+            }
             float dry = (inL ? inL[i] : 0.0f) + (synthSum * 0.35f);
+
             float driven = std::tanh(dry * driveGain + 0.08f * dry * dry);
 
             cabStateL += toneCutoff * (driven - cabStateL);

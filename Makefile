@@ -11,6 +11,7 @@ server:
 run-superapp: server
 	./omnigrid_server 1234
 
+# Append to Makefile
 WASM_OUT = public/wasm/dsp4guitar_core.js
 
 wasm-dsp:
@@ -21,6 +22,3 @@ wasm-dsp:
 		-sEXPORTED_FUNCTIONS='["_malloc","_free"]' \
 		-sEXPORTED_RUNTIME_METHODS='["HEAPF32"]' \
 		--bind -o $(WASM_OUT)
-
-clean:
-	rm -f omnigrid_server

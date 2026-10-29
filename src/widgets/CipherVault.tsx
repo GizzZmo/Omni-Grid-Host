@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Shield, Lock, Unlock } from 'lucide-react';
+import { Shield, Lock, Unlock } from '../icons';
 
 export function CipherVault() {
   const [locked, setLocked] = useState(true);

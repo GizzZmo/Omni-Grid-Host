@@ -13,10 +13,19 @@
   --radius: 0.25rem;
 }
 
+html, body, #root {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 body {
   font-family: var(--font-body);
   background-color: var(--color-bg);
   color: var(--color-text);
+}
+
+.react-grid-item {
+  min-width: 0;
 }
 
 h1, h2, h3, .font-display {

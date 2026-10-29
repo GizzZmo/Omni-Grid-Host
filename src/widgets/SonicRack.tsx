@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Music, Activity, Play, Square } from 'lucide-react';
+import { Music, Activity, Play, Square } from '../icons';
 import { useOmniBus } from '../hooks/useOmniBus';
 
 export function SonicRack() {
@@ -65,8 +65,8 @@ export function SonicRack() {
         <div className="flex items-center gap-2 text-green-400">
           <Music size={16} /> Sonic Rack · Phase 2 WASM DSP
         </div>
-        <span className={`text-[10px] ${connected ? 'text-green-400' : 'text-red-400'}`}>
-          {connected ? 'BUS LIVE' : 'BUS OFFLINE'}
+        <span className={`text-[10px] px-1.5 py-0.5 rounded ${connected ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-500'}`}>
+          {connected ? 'BUS LIVE' : 'local'}
         </span>
       </div>
 

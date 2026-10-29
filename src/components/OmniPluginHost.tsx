@@ -6,6 +6,7 @@ import {
   OmniWidgetHostProps,
 } from '../types/plugin-sdk';
 import { crossTalkBus } from '../services/crossTalkBus';
+import { linkSidecarEndpoint } from '../lib/sidecars';
 import { loadNativePluginComponent } from '../store/pluginRegistryStore';
 
 interface Props {
@@ -19,6 +20,7 @@ export const OmniPluginHost: React.FC<Props> = ({ instanceId, manifest, onClose 
     useState<React.ComponentType<OmniWidgetHostProps> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [sidecarLive, setSidecarLive] = useState(false);
 
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const busClientRef = useRef<CrossTalkClient | null>(null);
@@ -29,13 +31,35 @@ export const OmniPluginHost: React.FC<Props> = ({ instanceId, manifest, onClose 
     busClientRef.current = client;
 
     if (manifest.sidecar && manifest.sidecar.endpoint.startsWith('ws://')) {
-      const ws = new WebSocket(manifest.sidecar.endpoint);
-      sidecarWsRef.current = ws;
+      let alive = true;
+      let retry = 0;
+      let ws: WebSocket | null = null;
+
+      const connect = () => {
+        if (!alive) return;
+        ws = new WebSocket(linkSidecarEndpoint(manifest.sidecar!.endpoint));
+        sidecarWsRef.current = ws;
+        ws.onopen = () => {
+          if (alive) setSidecarLive(true);
+        };
+        ws.onclose = () => {
+          if (!alive) return;
+          setSidecarLive(false);
+          window.setTimeout(connect, Math.min(1000 * 2 ** retry, 8000));
+          retry += 1;
+        };
+      };
+      connect();
+
+      return () => {
+        alive = false;
+        crossTalkBus.unregisterInstance(instanceId);
+        ws?.close();
+      };
     }
 
     return () => {
       crossTalkBus.unregisterInstance(instanceId);
-      sidecarWsRef.current?.close();
     };
   }, [instanceId, manifest]);
 
@@ -105,8 +129,12 @@ export const OmniPluginHost: React.FC<Props> = ({ instanceId, manifest, onClose 
             {manifest.category}
           </span>
           {manifest.sidecar && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-700/40">
-              {manifest.sidecar.type}
+            <span className={`text-[10px] px-1.5 py-0.5 rounded border ${
+              sidecarLive
+                ? 'bg-emerald-950/80 text-emerald-300 border-emerald-700/40'
+                : 'bg-purple-950/80 text-purple-300 border-purple-700/40'
+            }`}>
+              {sidecarLive ? 'SIDECAR LINKED' : manifest.sidecar.type}
             </span>
           )}
         </div>

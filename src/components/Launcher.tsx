@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useOmniStore } from '../store';
-import { Grid3x3, Zap } from 'lucide-react';
+import { Grid3x3, Zap } from '../icons';
 
 export function Launcher() {
   const [open, setOpen] = useState(false);

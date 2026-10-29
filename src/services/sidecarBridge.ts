@@ -1,17 +1,46 @@
 // src/services/sidecarBridge.ts
 import { crossTalkBus } from './crossTalkBus';
 import { CrossTalkEnvelope } from '../types/plugin-sdk';
+import { linkSidecarEndpoint } from '../lib/sidecars';
+
+export interface SidecarLinkState {
+  cpp: boolean;
+  python: boolean;
+}
+
+type LinkListener = (state: SidecarLinkState) => void;
 
 class OmniSidecarBridge {
   private cppSocket: WebSocket | null = null;
   private pySocket: WebSocket | null = null;
+  private link: SidecarLinkState = { cpp: false, python: false };
+  private linkListeners = new Set<LinkListener>();
+  private started = false;
+
+  public getLinkState(): SidecarLinkState {
+    return this.link;
+  }
+
+  public onLink(listener: LinkListener): () => void {
+    this.linkListeners.add(listener);
+    listener(this.link);
+    return () => this.linkListeners.delete(listener);
+  }
+
+  private setLink(patch: Partial<SidecarLinkState>): void {
+    this.link = { ...this.link, ...patch };
+    this.linkListeners.forEach((fn) => fn(this.link));
+  }
 
   public init(
     cppEndpoint = 'ws://localhost:1234/ipc/pcap-stream',
     pyEndpoint = 'ws://localhost:8001/ws/sidecar'
   ): void {
-    this.connectSocket(cppEndpoint, 'CPP');
-    this.connectSocket(pyEndpoint, 'PYTHON');
+    if (this.started || typeof window === 'undefined') return;
+    this.started = true;
+
+    this.connectSocket(linkSidecarEndpoint(cppEndpoint), 'CPP');
+    this.connectSocket(linkSidecarEndpoint(pyEndpoint), 'PYTHON');
 
     crossTalkBus
       .registerInstance('system.sidecar.bridge', {
@@ -36,12 +65,24 @@ class OmniSidecarBridge {
   }
 
   private connectSocket(url: string, label: 'CPP' | 'PYTHON', retryAttempt = 0): void {
-    const ws = new WebSocket(url);
+    let ws: WebSocket;
+    try {
+      ws = new WebSocket(url);
+    } catch {
+      const delay = Math.min(1000 * Math.pow(2, retryAttempt), 15000);
+      setTimeout(() => this.connectSocket(url, label, retryAttempt + 1), delay);
+      return;
+    }
 
     ws.onopen = () => {
-      console.info(`[SidecarBridge] Connected to ${label} daemon at ${url}`);
-      if (label === 'CPP') this.cppSocket = ws;
-      if (label === 'PYTHON') this.pySocket = ws;
+      console.info(`[SidecarBridge] Linked ${label} at ${url}`);
+      if (label === 'CPP') {
+        this.cppSocket = ws;
+        this.setLink({ cpp: true });
+      } else {
+        this.pySocket = ws;
+        this.setLink({ python: true });
+      }
     };
 
     ws.onmessage = (event: MessageEvent<string>) => {
@@ -65,6 +106,8 @@ class OmniSidecarBridge {
     };
 
     ws.onclose = () => {
+      if (label === 'CPP') this.setLink({ cpp: false });
+      else this.setLink({ python: false });
       const delay = Math.min(1000 * Math.pow(2, retryAttempt), 15000);
       setTimeout(() => this.connectSocket(url, label, retryAttempt + 1), delay);
     };

@@ -6,7 +6,7 @@ export function PluginLauncher() {
   const list = Object.values(manifests);
 
   return (
-    <div className="flex gap-1.5 text-[10px] overflow-x-auto max-w-[60vw] scrollbar-thin">
+    <div className="flex gap-1.5 text-[10px] overflow-x-auto max-w-[46vw] min-w-0 scrollbar-thin">
       {list.map(m => (
         <button
           key={m.id}

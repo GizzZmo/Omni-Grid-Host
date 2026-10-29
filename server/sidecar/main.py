@@ -5,6 +5,7 @@
 import asyncio
 import json
 import os
+import re
 import time
 import uuid
 from typing import Dict, Set
@@ -116,6 +117,34 @@ async def face_recon_sentinel_loop() -> None:
         )
 
 
+def chords_for_prompt(prompt: str, bpm: int) -> Dict:
+    text = prompt.lower()
+    dark = any(word in text for word in ("phrygian", "noir", "dark", "minor"))
+    if dark:
+        voicings = [
+            (0, "Em Phrygian", [0, 2, 2, 0, 3, 0], [40, 47, 52, 55, 62, 64]),
+            (4, "Fmaj (bII)", [1, 3, 3, 2, 1, 1], [41, 48, 53, 57, 60, 65]),
+            (8, "Am(b6)", [5, 7, 7, 5, 8, 8], [45, 52, 57, 60, 64, 68]),
+            (12, "B7alt", [None, 2, 1, 2, 0, 3], [47, 51, 57, 59, 67]),
+        ]
+    else:
+        voicings = [
+            (0, "Em9 (Nordic Noir)", [0, 2, 4, 0, 3, 2], [40, 47, 54, 55, 62, 66]),
+            (4, "Cmaj7#11 (Cyber)", [None, 3, 2, 4, 0, 2], [48, 52, 59, 64, 66]),
+            (8, "Amadd9", [None, 0, 2, 4, 1, 0], [45, 52, 59, 60, 64]),
+            (12, "B7alt (Tension)", [None, 2, 1, 2, 0, 3], [47, 51, 57, 59, 67]),
+        ]
+    return {
+        str(step): {
+            "chordName": name,
+            "frets": frets,
+            "midiNotes": notes,
+            "bpm": bpm,
+        }
+        for step, name, frets, notes in voicings
+    }
+
+
 async def handle_agent_task(envelope: Dict) -> None:
     payload = envelope.get("payload", {})
     prompt = payload.get("prompt", "")
@@ -135,16 +164,27 @@ async def handle_agent_task(envelope: Dict) -> None:
             "Set GEMINI_API_KEY in environment for live LLM execution."
         )
 
+    bpm_match = re.search(r"(\d{2,3})\s*bpm", prompt, re.I)
+    bpm = int(bpm_match.group(1)) if bpm_match else 124
+    audio = agent_role == "NEURAL_AUDIO_COMPOSER" or "guitar" in prompt.lower() or "stem" in prompt.lower()
+    reply_payload = {
+        "agentRole": agent_role,
+        "status": "COMPLETED",
+        "output": reply_text,
+        "originalTaskId": envelope.get("id"),
+    }
+    if audio:
+        reply_payload["bpm"] = bpm
+        reply_payload["chords"] = chords_for_prompt(prompt, bpm)
+        reply_payload["output"] = (
+            f"[{agent_role}] Locked {bpm} BPM and pushed a 4-bar guitar ribbon onto the timeline."
+        )
+
     await hub.broadcast_envelope(
         source_id="python.sidecar.master-agentic-ai",
         mime_type="ai/agent-task",
         target_id=requester_id,
-        payload={
-            "agentRole": agent_role,
-            "status": "COMPLETED",
-            "output": reply_text,
-            "originalTaskId": envelope.get("id"),
-        },
+        payload=reply_payload,
     )
 
 

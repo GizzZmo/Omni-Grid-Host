@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Shield, Camera, AlertTriangle } from 'lucide-react';
+import { Shield, Camera, AlertTriangle } from '../icons';
 import { useOmniBus } from '../hooks/useOmniBus';
 import { useOmniStore } from '../store';
 
@@ -76,8 +76,8 @@ export function SecOpsCommand() {
         <div className="flex items-center gap-2 text-red-400">
           <Shield size={16} /> SecOps · Phase 3
         </div>
-        <span className={`text-[10px] ${connected ? 'text-green-400' : 'text-red-400'}`}>
-          {connected ? 'BUS LIVE' : 'BUS OFFLINE'}
+        <span className={`text-[10px] px-1.5 py-0.5 rounded ${connected ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-500'}`}>
+          {connected ? 'BUS LIVE' : 'local'}
         </span>
       </div>
 

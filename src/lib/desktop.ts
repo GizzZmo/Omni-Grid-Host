@@ -9,8 +9,10 @@ export function isTauri(): boolean {
 async function loadTauriInvoke(): Promise<((cmd: string, args?: unknown) => Promise<any>) | null> {
   if (!isTauri()) return null;
   try {
-    // @vite-ignore prevents Vite from statically resolving the optional Tauri package
-    const mod = await import(/* @vite-ignore */ '@tauri-apps/api/core');
+    const tauriCore = '@tauri-apps/api/core';
+    const mod = (await import(/* @vite-ignore */ tauriCore)) as {
+      invoke: (cmd: string, args?: unknown) => Promise<any>;
+    };
     return mod.invoke;
   } catch {
     return null;

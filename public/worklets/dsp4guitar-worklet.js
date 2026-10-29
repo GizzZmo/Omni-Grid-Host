@@ -21,9 +21,12 @@ class DSP4GuitarWorkletProcessor extends AudioWorkletProcessor {
       case 'SET_PARAMS': {
         const { drive, tone, delayTime, delayMix, master } = msg.payload;
         this.jsParams = { drive, tone, delayTime, delayMix, master };
-        if (this.dsp) this.dsp.setParameters(drive, tone, delayTime, delayMix, master);
+        if (this.dsp) {
+          this.dsp.setParameters(drive, tone, delayTime, delayMix, master);
+        }
         break;
       }
+
       case 'MIDI_CHORD': {
         const notes = msg.payload.midiNotes || [];
         notes.forEach((midiNote, idx) => {
@@ -53,7 +56,9 @@ class DSP4GuitarWorkletProcessor extends AudioWorkletProcessor {
       } else {
         globalThis.Module.HEAPF32.fill(0, this.inPtrL >> 2, (this.inPtrL >> 2) + numSamples);
       }
+
       this.dsp.processBlock(this.inPtrL, this.outPtrL, this.outPtrR, numSamples);
+
       outL.set(globalThis.Module.HEAPF32.subarray(this.outPtrL >> 2, (this.outPtrL >> 2) + numSamples));
       outR.set(globalThis.Module.HEAPF32.subarray(this.outPtrR >> 2, (this.outPtrR >> 2) + numSamples));
     } else {
@@ -67,18 +72,25 @@ class DSP4GuitarWorkletProcessor extends AudioWorkletProcessor {
           voice.env *= 0.9997;
           if (voice.env < 0.001) this.jsVoices.splice(v, 1);
         }
+
         const dry = (inputChannel ? inputChannel[i] : 0) + synth;
         const driven = Math.tanh(dry * this.jsParams.drive);
         this.jsCabState += this.jsParams.tone * (driven - this.jsCabState);
         const sample = this.jsCabState * this.jsParams.master;
+
         outL[i] = sample;
         outR[i] = sample;
         sumSq += sample * sample;
       }
+
       if (++this.frameCounter % 12 === 0) {
-        this.port.postMessage({ type: 'TELEMETRY', rms: Math.sqrt(sumSq / numSamples) });
+        this.port.postMessage({
+          type: 'TELEMETRY',
+          rms: Math.sqrt(sumSq / numSamples),
+        });
       }
     }
+
     return true;
   }
 }

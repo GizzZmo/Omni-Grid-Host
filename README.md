@@ -1,18 +1,93 @@
 # Omni-Grid Host 3.0
+
 **Polyglot Microkernel Desktop Host** — Unified application realizing the architectural blueprint.
 
-Built from the Omni-Grid 2.0 chassis + extension packs covering Neural/Agentic, Sonic/DAW, SecOps, DevOps, and Creative repositories.
+> "The grid is awake. I am Jon-Arve Constantine. If the rain is moving, you are already inside."
+
+## Documentation
+
+| Guide | Read it for |
+|-------|-------------|
+| [docs/README.md](docs/README.md) | Architecture, phases, API, the full map |
+| [docs/OPERATOR-MANUAL.md](docs/OPERATOR-MANUAL.md) | What is on screen and how a session goes |
+| [docs/TIPS-AND-TRICKS.md](docs/TIPS-AND-TRICKS.md) | The short moves that save a session |
+| [docs/AUDIO-DESK.md](docs/AUDIO-DESK.md) | NAW, TABFRET, and DSP4Guitar as one instrument |
+| [docs/SIDECARS.md](docs/SIDECARS.md) | C++ analyzer, Python sidecar, Phase 1 bus |
+| [docs/GREETINGS.md](docs/GREETINGS.md) | Jon-Arve Constantine, at length |
+| [docs/PHASES.md](docs/PHASES.md) | Phases 1–9 |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Microkernel, isolation, persistence |
+| [docs/WIDGET-DEVELOPMENT.md](docs/WIDGET-DEVELOPMENT.md) | Writing a tile |
+
+## AI Provider Settings
+
+Click **⚙ Settings** in the header to set:
+
+- **Provider**: OpenAI, Anthropic, Gemini, Groq, Ollama (local), or custom OpenAI-compatible
+- **API Key**: Stored locally in the browser (never sent to Omni-Grid servers)
+- **Base URL** (for Ollama / custom)
+- **Model** (optional override)
+
+Widgets and services can read the config via `useSettingsStore` or `getAiConfig()`.
+
+## Quick Start
+
+```bash
+npm install
+npm run dev          # http://localhost:5173
+npm run dev:full     # daemon + Vite
+```
+
+For packet telemetry and the Python composer, also build and run the C++ server. It spawns Uvicorn. See [docs/SIDECARS.md](docs/SIDECARS.md). The footer should read **C++ LINKED** and **PY LINKED**.
+
+## Phases
+
+| Phase | Status | Summary |
+|-------|--------|---------|
+| 1 | ✅ | WebSocket daemon + process supervisor |
+| 2 | ✅ | DSP4Guitar AudioWorklet + live input + volume knobs |
+| 3 | ✅ | SecOps Sentinel (radar, biometric lock, playbooks) |
+| 4 | ✅ | Tauri host + dynamic plugin loader + CLI bundler |
+| 5 | ✅ | Multi-workspace, HoverMind capture, agent mesh, audit log |
+| 6 | ✅ | Agent autonomy + adaptive learning |
+| 7 | ✅ | Self-healing and fault tolerance |
+| 8 | ✅ | Quantum-resistant encryption (hybrid PQC) |
+| 9 | ✅ | Self-healing network (topology, reroute) |
+
+Spawn **Phase 5 Enterprise Mesh** from the PluginLauncher to use workspaces, route agent tasks, arm HoverMind (Alt+Shift+H), and inspect the audit log.
+
+Press **PLAY STEMS** on NAW to drive TABFRET and DSP4Guitar. Click or drag a chord on the ribbon to audition it.
+
+## Key Paths
+
+- `docs/` — full documentation, including the operator's greetings
+- `src/services/phase5.ts` — Phase 5 store
+- `src/services/sidecarBridge.ts` — C++ and Python link
+- `src/native-plugins/naw/` — multi-stem timeline
+- `scripts/omni-plugin-cli.ts` — Repo-to-Widget bundler
+- `dsp/dsp4guitar_wasm.cpp` — real-time DSP core
+
+## CLI
+
+```bash
+npm run plugin:bundle -- --repo https://github.com/GizzZmo/TABFRET --category AUDIO
+npm run plugin:sync-all
+```
+
+---
+
+Built on the Omni-Grid 2.0 chassis. Repository: https://github.com/GizzZmo/Omni-Grid-Host
 
 ## Architecture Implemented
 
 - **Frontend Shell**: React 19 + TypeScript + Zustand + Tailwind CSS + react-grid-layout (Bento tiles)
 - **Extension SDK**: `OmniExtensionManifest` with runtime bridges, permissions, and Cross-Talk contracts
-- **Cross-Talk Bus**: Typed event bus (Zustand store) for inter-widget payloads (audio/pcm, sec/alert, ai/agent-task, git/patch)
+- **Cross-Talk Bus**: Typed event bus for inter-widget payloads (`audio/midi`, `sec/pcap-packet`, `ai/agent-task`, `ai/prompt`, …)
 - **Widget System**: Sandboxed Bento widgets with drag handles, close, and launcher
-- **Runtime Bridges** (simulated in this prototype):
-  - Python Sidecar (FastAPI/gRPC style) for Master-Agentic-AI, HoverMind, Ai_shell
-  - C++ / WASM for DSP4Guitar, Network-Analyzer, pcap daemon
-  - Node/C++ native addons for autofix and binary inspection
+- **Runtime Bridges**:
+  - Python Sidecar (FastAPI) for Master-Agentic-AI, Face-Recon, Neural Compose replies
+  - C++ WebSocket daemon for Network-Analyzer
+  - WASM / AudioWorklet for DSP4Guitar
+  - Node daemon for process supervision
 
 ## Extension Packs (from blueprint)
 
@@ -21,15 +96,6 @@ Built from the Omni-Grid 2.0 chassis + extension packs covering Neural/Agentic, 
 3. SecOps & Biometric Sentinel
 4. DevOps & Self-Healing Forge
 5. Creative, Studio & Gaming
-
-## Quick Start
-
-```bash
-cd omni-grid-host
-yarn install   # or npm install (if arborist issues, use yarn)
-yarn dev
-# Open http://localhost:5173
-```
 
 ## Phase 1 Daemon
 
@@ -42,6 +108,7 @@ npm run daemon
 ```
 
 Control messages:
+
 - `{ "type": "system/spawn", "data": { "id": "python", "command": "python3", "args": ["server/workers/unified_sidecar.py"] } }`
 - `{ "type": "system/stop", "data": { "id": "python" } }`
 
@@ -56,70 +123,26 @@ npm install -D @tauri-apps/cli
 npm run tauri:dev
 ```
 
-The skeleton lives in `src-tauri/`. The process manager can later be moved into the Rust backend or kept as a sidecar.
+The skeleton lives in `src-tauri/`. Inside Tauri the sidecars are dialed on their direct ports. In the browser they are proxied on the dev server. See [docs/SIDECARS.md](docs/SIDECARS.md).
 
 ## Phase 2 — AudioWorklet DSP
 
-A live AudioWorklet processor is now mounted in the Sonic Rack widget:
-
-- `public/worklets/omni-dsp-processor.js` — gain + one-pole low-pass on the audio thread
-- Sonic Rack starts a test tone through the worklet, shows a live peak meter, and exposes gain/cutoff controls
-- Emits `audio/pcm` events on the Phase 1 bus
+- `public/worklets/dsp4guitar-worklet.js` and `public/worklets/omni-dsp-processor.js`
+- Live guitar input, INPUT gain, PHONES gain
+- MIDI from NAW / TABFRET triggers Karplus-Strong
 
 ```bash
-npm run dev:full   # daemon + Vite
-# Open Sonic Rack → Start DSP
+npm run dev
+# DSP4Guitar → ARM WASM DSP → Enable Guitar Input
 ```
 
-Next concrete step: replace the JS processor with an Emscripten-compiled DSP4Guitar / Frequalizer core.
+## Phase 3 — SecOps
 
-## Roadmap
+- SecOps Sentinel: polar threat radar fed by the C++ sidecar
+- Face-Recon lock blurs the grid while engaged
+- Anomaly spikes from the unprivileged analyzer exercise the radar without libpcap
 
-- **Phase 1**: WebSocket daemon + process supervisor (done)
-- **Phase 2**: AudioWorklet DSP path (proof-of-concept done; WASM port next)
-- **Phase 3**: Live pcap stream into SecOps tile + Face-Recon webcam lock
-- Desktop packaging: Tauri (preferred) or Electron host wrapping this shell
+---
 
-## Files
-
-- `src/types.ts` — OmniExtensionManifest + CrossTalk types
-- `src/store.ts` — Zustand local-first store + extension registry
-- `src/components/` — Grid, WidgetShell, Launcher, StatusBar
-- `src/widgets/` — Live prototypes of the five packs
-- `src/sdk/` — **Full TypeScript SDK** (manifest types, event bus, registry, runtime bridges)
-
-## TypeScript SDK
-
-The SDK lives in `src/sdk/` and is the canonical way to build extensions and interact with the host.
-
-```ts
-import {
-  extensionRegistry,
-  omniBus,
-  createRuntimeBridge,
-  type OmniExtensionManifest,
-} from './sdk';
-
-const manifest: OmniExtensionManifest = { /* ... */ };
-extensionRegistry.register(manifest);
-
-omniBus.on('ai/agent-result', (payload) => {
-  console.log(payload.data);
-});
-
-omniBus.emit({
-  type: 'ai/agent-task',
-  data: { prompt: 'analyze this' },
-  source: 'my-widget',
-});
-```
-
-Key modules:
-- `types.ts` — Complete manifest, payload, permission, and bridge types
-- `event-bus.ts` — Typed Cross-Talk bus with history
-- `extension-registry.ts` — Registration, status, and permission grants
-- `runtime.ts` — Mock and WebSocket bridges for Python/C++/WASM workers
-- `index.ts` — Barrel export
-- `example.ts` — Working usage example
-
-This is a functional, runnable realization of the unified Omni-Grid Host. Extend any widget or add new manifests to integrate additional repositories.
+> "Go on. The sixteenth notes are not going to play themselves. That is a lie. They will. Be there anyway."  
+> — Jon-Arve Constantine

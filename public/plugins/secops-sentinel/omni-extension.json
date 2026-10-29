@@ -6,7 +6,12 @@
   "category": "SECOPS",
   "isolation": "native-esm",
   "entryPoint": "/plugins/secops-sentinel/index.js",
-  "defaultLayout": { "w": 6, "h": 5, "minW": 4, "minH": 4 },
+  "defaultLayout": {
+    "w": 6,
+    "h": 5,
+    "minW": 4,
+    "minH": 4
+  },
   "sidecar": {
     "type": "cpp-daemon",
     "endpoint": "ws://localhost:1234/ipc/pcap-stream",

@@ -1,19 +1,63 @@
 // src/plugins/index.ts
+// Local plugin map so the registry loader can resolve remaining widgets
+// without remote ESM. Thin wrappers — each component is the default export.
+
 import {
-  AestheticEngine, AssetCommand, BrowserWidget, ChainPulse, ChromaLab,
-  CipherPad, ClipboardStream, CommunityPortal, CyberEditor, DevOptic,
-  DocuHub, FocusHUD, GhostWidget, GitPulse, HelpDesk, MacroNet,
-  MarketWidget, NeuralChat, NeuralScratchpad, NewsFeed, PDFViewer,
-  PolyglotBox, ProjectTracker, PromptLab, QuantumCalc, RegRadar,
-  ResearchBrowser, SecureCalendar, SignalRadio, StrategicBlueprint,
-  SudokuGrid, SunoPlayer, SystemCore, TemporalNexus, UniversalTransformer,
-  ValutaExchange, WeatherStation, WebTerminal, WidgetArchitect,
-  WidgetMarketplace, WritePad,
+  AestheticEngine,
+  AssetCommand,
+  BrowserWidget,
+  ChainPulse,
+  ChromaLab,
+  CipherPad,
+  ClipboardStream,
+  CommunityPortal,
+  CyberEditor,
+  DevOptic,
+  DocuHub,
+  FocusHUD,
+  GhostWidget,
+  GitPulse,
+  HelpDesk,
+  MacroNet,
+  MarketWidget,
+  NeuralChat,
+  NeuralScratchpad,
+  NewsFeed,
+  PDFViewer,
+  PolyglotBox,
+  ProjectTracker,
+  PromptLab,
+  QuantumCalc,
+  RegRadar,
+  ResearchBrowser,
+  SecureCalendar,
+  SignalRadio,
+  StrategicBlueprint,
+  SudokuGrid,
+  SunoPlayer,
+  SystemCore,
+  TemporalNexus,
+  UniversalTransformer,
+  ValutaExchange,
+  WeatherStation,
+  WebTerminal,
+  WidgetArchitect,
+  WidgetMarketplace,
+  WritePad,
 } from '../widgets/remaining';
 
+import Phase9NetHealWidget from '../native-plugins/phase9-netheal/index';
+import Phase8PqcWidget from '../native-plugins/phase8-pqc/index';
+import Phase7HealWidget from '../native-plugins/phase7-heal/index';
+import Phase6AutonomyWidget from '../native-plugins/phase6-autonomy/index';
+import Phase5CommandWidget from '../native-plugins/phase5-command/index';
+import SecOpsSentinelWidget from '../native-plugins/secops-sentinel/index';
 import { SonicArchitecture } from '../widgets/SonicArchitecture';
 import { MultiAgentHub } from '../widgets/MultiAgentHub';
 import { CipherVault } from '../widgets/CipherVault';
+import DSP4GuitarWidget from '../native-plugins/dsp4guitar/index';
+import TabFretWidget from '../native-plugins/tabfret/index';
+import NAWWidget from '../native-plugins/naw/index';
 
 export const localPluginMap: Record<string, React.ComponentType<any>> = {
   'gizzzmo.system.aesthetic': AestheticEngine,
@@ -60,4 +104,13 @@ export const localPluginMap: Record<string, React.ComponentType<any>> = {
   'gizzzmo.audio.sonic-architecture': SonicArchitecture,
   'gizzzmo.neural.multi-agent': MultiAgentHub,
   'gizzzmo.secops.cipher-vault': CipherVault,
+  'gizzzmo.secops.sentinel': SecOpsSentinelWidget,
+  'gizzzmo.audio.dsp4guitar': DSP4GuitarWidget,
+  'gizzzmo.audio.tabfret': TabFretWidget,
+  'gizzzmo.audio.naw': NAWWidget,
+  'gizzzmo.system.phase5': Phase5CommandWidget,
+  'gizzzmo.system.phase6': Phase6AutonomyWidget,
+  'gizzzmo.system.phase7': Phase7HealWidget,
+  'gizzzmo.system.phase8': Phase8PqcWidget,
+  'gizzzmo.system.phase9': Phase9NetHealWidget,
 };

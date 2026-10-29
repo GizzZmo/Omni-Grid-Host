@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bot, Send } from 'lucide-react';
+import { Bot, Send } from '../icons';
 
 const AGENTS = [
   { id: 'secops', name: 'AutoSec Responder', color: 'text-red-400', icon: '🛡️' },

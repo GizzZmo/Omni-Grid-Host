@@ -2,6 +2,8 @@
 // Compile: g++ -std=c++17 -O2 -pthread server/omnigrid_server.cpp -o omnigrid_server
 // With libpcap: g++ -std=c++17 -O2 -pthread -DHAVE_PCAP server/omnigrid_server.cpp -lpcap -o omnigrid_server
 
+#include <algorithm>
+#include <cctype>
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -192,21 +194,33 @@ std::string get_mime_type(const std::string& path) {
 }
 
 void handle_client(int client_fd, const std::string& web_root) {
-    char buffer[4096] = {0};
-    ssize_t bytes = recv(client_fd, buffer, sizeof(buffer) - 1, 0);
-    if (bytes <= 0) { close(client_fd); return; }
-
-    std::string req(buffer, bytes);
+    std::string req;
+    char buffer[4096];
+    while (req.find("\r\n\r\n") == std::string::npos && req.size() < 16384) {
+        ssize_t bytes = recv(client_fd, buffer, sizeof(buffer), 0);
+        if (bytes <= 0) break;
+        req.append(buffer, static_cast<size_t>(bytes));
+    }
+    if (req.empty()) { close(client_fd); return; }
     std::istringstream iss(req);
     std::string method, url_path, protocol;
     iss >> method >> url_path >> protocol;
 
-    if (req.find("Upgrade: websocket") != std::string::npos && url_path == "/ipc/pcap-stream") {
-        auto key_pos = req.find("Sec-WebSocket-Key: ");
+    std::string req_lower = req;
+    std::transform(req_lower.begin(), req_lower.end(), req_lower.begin(),
+                   [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    const bool ws_upgrade = req_lower.find("upgrade: websocket") != std::string::npos;
+    const bool pcap_path = url_path == "/ipc/pcap-stream" || url_path.rfind("/ipc/pcap-stream?", 0) == 0;
+
+    if (ws_upgrade && pcap_path) {
+        auto key_pos = req_lower.find("sec-websocket-key:");
         if (key_pos != std::string::npos) {
-            size_t start = key_pos + 19;
+            size_t start = key_pos + std::string("sec-websocket-key:").size();
+            while (start < req.size() && (req[start] == ' ' || req[start] == '\t')) start++;
             size_t end = req.find("\r\n", start);
             std::string sec_key = req.substr(start, end - start);
+            // trim trailing spaces
+            while (!sec_key.empty() && (sec_key.back() == ' ' || sec_key.back() == '\r')) sec_key.pop_back();
             std::string accept_key = crypto::base64_encode(
                 crypto::sha1(sec_key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
             );

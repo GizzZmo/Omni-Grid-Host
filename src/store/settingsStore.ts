@@ -1,8 +1,16 @@
 // src/store/settingsStore.ts
+// Persistent UI settings for AI provider and API key.
+
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-export type AiProvider = 'openai' | 'anthropic' | 'gemini' | 'groq' | 'ollama' | 'custom';
+export type AiProvider =
+  | 'openai'
+  | 'anthropic'
+  | 'gemini'
+  | 'groq'
+  | 'ollama'
+  | 'custom';
 
 export interface AiSettings {
   provider: AiProvider;
@@ -20,7 +28,12 @@ interface SettingsState extends AiSettings {
   reset: () => void;
 }
 
-const DEFAULTS: AiSettings = { provider: 'openai', apiKey: '', baseUrl: '', model: '' };
+const DEFAULTS: AiSettings = {
+  provider: 'openai',
+  apiKey: '',
+  baseUrl: '',
+  model: '',
+};
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
@@ -37,5 +50,11 @@ export const useSettingsStore = create<SettingsState>()(
   )
 );
 
-export function getAiConfig(): AiSettings { return useSettingsStore.getState(); }
-export function hasApiKey(): boolean { return !!useSettingsStore.getState().apiKey; }
+// Convenience helpers for widgets/services
+export function getAiConfig(): AiSettings {
+  return useSettingsStore.getState();
+}
+
+export function hasApiKey(): boolean {
+  return !!useSettingsStore.getState().apiKey;
+}

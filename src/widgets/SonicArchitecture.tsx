@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Music, Play, Pause } from 'lucide-react';
+import { Music, Play, Pause } from '../icons';
 
 const RELATIVE_MAJORS = ['C', 'G', 'D', 'A', 'E', 'B', 'Gb', 'Db', 'Ab', 'Eb', 'Bb', 'F'];
 const RELATIVE_MINORS = ['Am', 'Em', 'Bm', 'F#m', 'C#m', 'G#m', 'D#m', 'Bbm', 'Fm', 'Cm', 'Gm', 'Dm'];

@@ -1,0 +1,24 @@
+{
+  "id": "gizzzmo.audio.naw",
+  "name": "NAW // Neural Audio Workstation",
+  "version": "2.0.0",
+  "repository": "https://github.com/GizzZmo/NAW",
+  "category": "AUDIO",
+  "isolation": "native-esm",
+  "entryPoint": "/plugins/naw/index.js",
+  "defaultLayout": {
+    "w": 8,
+    "h": 4,
+    "minW": 6,
+    "minH": 4
+  },
+  "sidecar": {
+    "type": "python-sidecar",
+    "endpoint": "ws://localhost:8001/ws/sidecar",
+    "permissions": ["usb-audio", "web-midi", "gemini-api"]
+  },
+  "crossTalk": {
+    "accepts": ["audio/midi", "ai/agent-task", "ai/prompt"],
+    "emits": ["audio/midi", "audio/pcm-stream", "ai/prompt"]
+  }
+}

@@ -66,10 +66,10 @@ export const useOmniStore = create<OmniState>()(
   persist(
     (set) => ({
       layouts: [
-        { i: 'neural', x: 0, y: 0, w: 6, h: 8 },
-        { i: 'sonic', x: 6, y: 0, w: 6, h: 8 },
-        { i: 'secops', x: 0, y: 8, w: 6, h: 6 },
-        { i: 'dev', x: 6, y: 8, w: 6, h: 6 },
+        { i: 'neural', x: 0, y: 0, w: 3, h: 4 },
+        { i: 'sonic', x: 3, y: 0, w: 3, h: 4 },
+        { i: 'secops', x: 6, y: 0, w: 3, h: 4 },
+        { i: 'dev', x: 9, y: 0, w: 3, h: 4 },
       ],
       visibleWidgets: ['neural', 'sonic', 'secops', 'dev'],
       theme: 'cyber',
@@ -88,6 +88,6 @@ export const useOmniStore = create<OmniState>()(
       })),
       setTheme: (theme) => set({ theme }),
     }),
-    { name: 'omni-grid-host' }
+    { name: 'omni-grid-host-v2' }
   )
 );
