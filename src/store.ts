@@ -88,6 +88,20 @@ export const useOmniStore = create<OmniState>()(
       })),
       setTheme: (theme) => set({ theme }),
     }),
-    { name: 'omni-grid-host-v2' }
+    {
+      name: 'omni-grid-host-v2',
+      partialize: (state) => ({
+        layouts: state.layouts,
+        visibleWidgets: state.visibleWidgets,
+        theme: state.theme,
+        crossTalkBus: state.crossTalkBus,
+        extensions: state.extensions,
+      }),
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as Partial<OmniState>),
+        locked: false,
+      }),
+    }
   )
 );

@@ -31,6 +31,7 @@ const NAW_MANIFEST = {
 export default function App() {
   const theme = useOmniStore(s => s.theme);
   const locked = useOmniStore(s => s.locked);
+  const setLocked = useOmniStore(s => s.setLocked);
   const provider = useSettingsStore(s => s.provider);
   const hasKey = useSettingsStore(s => !!s.apiKey);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -90,7 +91,13 @@ export default function App() {
           <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-sm">
             <div className="text-center">
               <div className="text-red-400 text-2xl font-bold tracking-widest mb-2">BIOMETRIC LOCK</div>
-              <div className="text-xs text-cyan-300/70">Face-Recon active — sensitive widgets blurred</div>
+              <div className="text-xs text-cyan-300/70 mb-4">Face-Recon active — sensitive widgets blurred</div>
+              <button
+                onClick={() => setLocked(false)}
+                className="px-3 py-1.5 rounded border border-cyan-400/60 text-cyan-200 text-xs tracking-widest hover:bg-cyan-500/20"
+              >
+                Release lock
+              </button>
             </div>
           </div>
         )}
