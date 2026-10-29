@@ -2,7 +2,29 @@
 
 **Polyglot Microkernel Desktop Host** — Unified application realizing the architectural blueprint.
 
+<p align="center">
+  <img src="docs/assets/mark.jpg" alt="Omni-Grid mark" width="96" />
+</p>
+
 > "The grid is awake. I am Jon-Arve Constantine. If the rain is moving, you are already inside."
+
+![Omni-Grid Host banner](docs/assets/banner.jpg)
+
+## The desk
+
+Four core tiles across the top. The audio chain — NAW, TABFRET, DSP4Guitar — sits underneath. The footer is the sidecar link: **C++ LINKED**, **PY LINKED**, and the provider slot.
+
+| Desk | Audio chain |
+| --- | --- |
+| ![Four core tiles with sidecars linked](docs/assets/desk.jpg) | ![NAW timeline, TABFRET, and DSP4Guitar](docs/assets/audio-desk.jpg) |
+
+| Transport | Settings | Phone |
+| --- | --- | --- |
+| ![Sixteenth-note transport on step 8](docs/assets/playing.jpg) | ![Provider and API key](docs/assets/settings.jpg) | ![Stacked desk on a phone](docs/assets/mobile.jpg) |
+
+Press **PLAY STEMS** on NAW. The ribbon sends the chord to TABFRET. DSP4Guitar follows the same MIDI. **⚙ Settings** stores a provider and key in the browser only.
+
+Brand marks live in [docs/assets](docs/assets) and are served from `public/brand/` (`mark.jpg`, `icon.jpg`, `banner.jpg`).
 
 ## Documentation
 
