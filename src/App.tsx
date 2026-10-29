@@ -63,7 +63,15 @@ export default function App() {
           <div className="w-8 h-8 bg-cyan-400 rounded-sm flex items-center justify-center font-bold text-black">OG</div>
           <h1 className="text-xl font-bold tracking-widest text-cyan-400">OMNI-GRID <span className="text-magenta-400">HOST 3.0</span></h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <a
+            href="/download/Omni-Grid-Host.zip"
+            download="Omni-Grid-Host.zip"
+            className="px-2 py-1 rounded bg-cyan-400 text-black text-xs font-bold tracking-wide hover:bg-cyan-300"
+            title="Download Omni-Grid Host"
+          >
+            Download
+          </a>
           <PluginLauncher />
           <button
             onClick={() => setSettingsOpen(true)}
