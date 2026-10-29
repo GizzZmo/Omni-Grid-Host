@@ -10,6 +10,8 @@
 
 ![Omni-Grid Host banner](docs/assets/banner.jpg)
 
+**Live desk:** [omni-grid-host.vercel.app](https://omni-grid-host.vercel.app)
+
 ## The desk
 
 Four core tiles across the top. The audio chain — NAW, TABFRET, DSP4Guitar — sits underneath. The footer is the sidecar link: **C++ LINKED**, **PY LINKED**, and the provider slot.
