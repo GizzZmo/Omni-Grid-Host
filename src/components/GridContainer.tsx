@@ -93,7 +93,7 @@ export function GridContainer() {
         const Widget = widgetMap[id];
         if (!Widget) return null;
         return (
-          <div key={id} className="h-full min-h-0 cyber-border rounded-lg overflow-hidden bg-cyber-panel/80 backdrop-blur">
+          <div key={id} data-instance={id} className="h-full min-h-0 cyber-border rounded-lg overflow-hidden bg-cyber-panel/80 backdrop-blur">
             <WidgetShell title={id.toUpperCase()} id={id}>
               <Widget />
             </WidgetShell>
@@ -105,7 +105,7 @@ export function GridContainer() {
         const manifest = manifests[inst.pluginId];
         if (!manifest) return null;
         return (
-          <div key={inst.instanceId} className="h-full min-h-0">
+          <div key={inst.instanceId} data-instance={inst.instanceId} className="h-full min-h-0">
             <OmniPluginHost
               instanceId={inst.instanceId}
               manifest={manifest}

@@ -53,7 +53,7 @@ Click **⚙ Settings** in the header to set:
 - **Base URL** (for Ollama / custom)
 - **Model** (optional override)
 
-Widgets and services can read the config via `useSettingsStore` or `getAiConfig()`.
+Widgets and services can read the config via `useSettingsStore` or `getAiConfig()`. Neural Hub, Neural Chat, the editor, Write Pad, and the other Omni-Grid 2.0 tiles use that same key. Gemini answers from the browser. **Install** in the marketplace also opens the tile on the desk.
 
 ## Quick Start
 

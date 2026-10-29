@@ -81,7 +81,7 @@ export const NeuralChat: React.FC = () => {
         id: generateId(),
         role: 'assistant',
         content:
-          'No API key detected. Add your Gemini API key in **Settings → Advanced** to enable AI responses.',
+          'No API key yet. Open Settings in the header, pick a provider, and save a key. Gemini answers directly from the desk.',
         timestamp: Date.now(),
       };
       setMessages(prev => [...prev, errMsg]);

@@ -33,7 +33,8 @@ import {
 } from 'lucide-react';
 import { useAppStore } from '../store';
 import { MARKETPLACE_CATALOG } from './marketplaceCatalog';
-import { MarketplaceCategory, MarketplaceEntry } from '../types';
+import { openOnDesk, closeOnDesk } from '../openOnDesk';
+import type { MarketplaceCategory, MarketplaceEntry } from '../types';
 import {
   COMMUNITY_SUBMISSIONS_UPDATED_EVENT,
   loadCommunitySubmissions,
@@ -642,22 +643,20 @@ export const WidgetMarketplace: React.FC = () => {
 
   const handleInstall = (id: string) => {
     installWidget(id);
-    // Also activate the widget on the grid
     const visibleWidgets = useAppStore.getState().visibleWidgets;
-    if (!visibleWidgets.includes(id)) {
-      toggleWidget(id);
-    }
+    if (!visibleWidgets.includes(id)) toggleWidget(id);
+    void openOnDesk(id);
   };
 
   const handleUninstall = (id: string) => {
     uninstallWidget(id);
     if (selectedEntry?.id === id) setSelectedEntry(null);
+    void closeOnDesk(id);
   };
 
   const handleOpenCommunityPortal = () => {
-    if (!visibleWidgets.includes('COMMUNITY_PORTAL')) {
-      toggleWidget('COMMUNITY_PORTAL');
-    }
+    if (!visibleWidgets.includes('COMMUNITY_PORTAL')) toggleWidget('COMMUNITY_PORTAL');
+    void openOnDesk('COMMUNITY_PORTAL');
   };
 
   const filteredEntries = useMemo(() => {

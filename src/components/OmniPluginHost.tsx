@@ -7,6 +7,7 @@ import {
 } from '../types/plugin-sdk';
 import { crossTalkBus } from '../services/crossTalkBus';
 import { linkSidecarEndpoint } from '../lib/sidecars';
+import { categoryAccent } from '../lib/categoryAccent';
 import { loadNativePluginComponent } from '../store/pluginRegistryStore';
 
 interface Props {
@@ -110,22 +111,25 @@ export const OmniPluginHost: React.FC<Props> = ({ instanceId, manifest, onClose 
     crossTalkBus.parseDropPayload(e, instanceId);
   };
 
+  const accent = categoryAccent(manifest.category);
+
   return (
     <div
       onDragOver={handleDragOver}
       onDragLeave={() => setIsDragOver(false)}
       onDrop={handleDrop}
-      className={`relative flex flex-col w-full h-full rounded-xl bg-slate-950/90 border transition-all overflow-hidden ${
+      className={`relative flex flex-col w-full h-full rounded-xl bg-slate-950/95 border transition-all overflow-hidden ${
         isDragOver
           ? 'border-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.45)]'
           : 'border-slate-800 hover:border-slate-700'
       }`}
+      style={{ boxShadow: `inset 3px 0 0 ${accent}` }}
     >
-      <div className="widget-drag flex items-center justify-between px-3 py-1.5 bg-slate-900/80 border-b border-slate-800 text-xs font-mono select-none cursor-move [.grid-locked_&]:cursor-default">
-        <div className="flex items-center gap-2">
-          <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-slate-200 font-semibold tracking-wider">{manifest.name}</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 text-cyan-400">
+      <div className="widget-drag flex items-center justify-between px-3 py-1.5 bg-gradient-to-r from-slate-900 to-slate-950 border-b border-slate-800 text-xs font-mono select-none cursor-move [.grid-locked_&]:cursor-default">
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ background: accent }} />
+          <span className="text-slate-100 font-semibold tracking-wide truncate">{manifest.name}</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800/80 shrink-0" style={{ color: accent }}>
             {manifest.category}
           </span>
           {manifest.sidecar && (
@@ -147,7 +151,7 @@ export const OmniPluginHost: React.FC<Props> = ({ instanceId, manifest, onClose 
         </button>
       </div>
 
-      <div className="relative flex-1 min-h-0 w-full overflow-auto">
+      <div className="omni-slot relative flex-1 min-h-0 w-full overflow-auto">
         {error && (
           <div className="p-4 text-xs font-mono text-rose-400 bg-rose-950/30">
             [PLUGIN FAULT] {error}
