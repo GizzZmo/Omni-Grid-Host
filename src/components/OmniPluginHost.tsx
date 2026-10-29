@@ -147,7 +147,7 @@ export const OmniPluginHost: React.FC<Props> = ({ instanceId, manifest, onClose 
         </button>
       </div>
 
-      <div className="relative flex-1 w-full h-full overflow-auto">
+      <div className="relative flex-1 min-h-0 w-full overflow-auto">
         {error && (
           <div className="p-4 text-xs font-mono text-rose-400 bg-rose-950/30">
             [PLUGIN FAULT] {error}

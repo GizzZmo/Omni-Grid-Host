@@ -2,7 +2,20 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { localPluginMap } from '../plugins';
+import { useOmniStore } from '../store';
 import { OmniPluginManifest, OmniWidgetHostProps } from '../types/plugin-sdk';
+
+function nextOpenCell(w: number, h: number, taken: { x: number; y: number; w: number; h: number }[]) {
+  const hits = (x: number, y: number) =>
+    taken.some((item) => x < item.x + item.w && x + w > item.x && y < item.y + item.h && y + h > item.y);
+  for (let y = 0; y < 80; y += 1) {
+    for (let x = 0; x <= 12 - w; x += 1) {
+      if (!hits(x, y)) return { x, y };
+    }
+  }
+  const bottom = taken.reduce((max, item) => Math.max(max, item.y + item.h), 0);
+  return { x: 0, y: bottom };
+}
 
 export interface ActiveWidgetInstance {
   instanceId: string;
@@ -289,20 +302,22 @@ export const usePluginRegistry = create<PluginRegistryState>()(
           manifests: { ...state.manifests, [manifest.id]: manifest },
         })),
 
-      spawnWidget: (pluginId, coords = { x: 0, y: 0 }, size) => {
+      spawnWidget: (pluginId, coords, size) => {
         const manifest = get().manifests[pluginId];
         if (!manifest) return null;
 
+        const w = Math.min(12, Math.max(4, size?.w ?? manifest.defaultLayout.w));
+        const h = Math.max(6, size?.h ?? manifest.defaultLayout.h);
+        const taken = [
+          ...useOmniStore.getState().layouts,
+          ...get().activeInstances.map((inst) => inst.layout),
+        ];
+        const spot = coords ?? nextOpenCell(w, h, taken);
         const instanceId = `${pluginId}::${crypto.randomUUID().slice(0, 8)}`;
         const newInstance: ActiveWidgetInstance = {
           instanceId,
           pluginId,
-          layout: {
-            x: coords.x,
-            y: coords.y,
-            w: size?.w ?? manifest.defaultLayout.w,
-            h: size?.h ?? manifest.defaultLayout.h,
-          },
+          layout: { x: spot.x, y: spot.y, w, h },
         };
 
         set((state) => ({
@@ -333,14 +348,37 @@ export const usePluginRegistry = create<PluginRegistryState>()(
       name: 'omnigrid-plugin-registry-v2',
       merge: (persistedState, currentState) => {
         const persisted = (persistedState ?? {}) as Partial<PluginRegistryState>;
+        const manifests = {
+          ...currentState.manifests,
+          ...(persisted.manifests ?? {}),
+        };
+        const core = useOmniStore.getState().layouts;
+        const raw = persisted.activeInstances ?? [];
+        const grown = raw.map((inst) => {
+          const w = Math.min(12, Math.max(4, inst.layout.w));
+          const h = Math.max(6, inst.layout.h);
+          return { ...inst, layout: { ...inst.layout, w, h } };
+        });
+        const taken = core.map((item) => ({ x: item.x, y: item.y, w: item.w, h: item.h }));
+        const activeInstances = grown.map((inst) => {
+          const { w, h } = inst.layout;
+          let { x, y } = inst.layout;
+          const hits = (xx: number, yy: number) =>
+            taken.some((item) => xx < item.x + item.w && xx + w > item.x && yy < item.y + item.h && yy + h > item.y);
+          if (x < 0 || y < 0 || x + w > 12 || hits(x, y)) {
+            const spot = nextOpenCell(w, h, taken);
+            x = spot.x;
+            y = spot.y;
+          }
+          const layout = { x, y, w, h };
+          taken.push(layout);
+          return { ...inst, layout };
+        });
         return {
           ...currentState,
           ...persisted,
-          manifests: {
-            ...currentState.manifests,
-            ...(persisted.manifests ?? {}),
-          },
-          activeInstances: persisted.activeInstances ?? [],
+          manifests,
+          activeInstances,
         };
       },
     }

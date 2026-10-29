@@ -44,7 +44,10 @@ import {
   WidgetArchitect,
   WidgetMarketplace,
   WritePad,
-} from '../widgets/remaining';
+  SonicArchitecture,
+  MultiAgentHub,
+  CipherVault,
+} from '../og2/widgets';
 
 import Phase9NetHealWidget from '../native-plugins/phase9-netheal/index';
 import Phase8PqcWidget from '../native-plugins/phase8-pqc/index';
@@ -52,9 +55,6 @@ import Phase7HealWidget from '../native-plugins/phase7-heal/index';
 import Phase6AutonomyWidget from '../native-plugins/phase6-autonomy/index';
 import Phase5CommandWidget from '../native-plugins/phase5-command/index';
 import SecOpsSentinelWidget from '../native-plugins/secops-sentinel/index';
-import { SonicArchitecture } from '../widgets/SonicArchitecture';
-import { MultiAgentHub } from '../widgets/MultiAgentHub';
-import { CipherVault } from '../widgets/CipherVault';
 import DSP4GuitarWidget from '../native-plugins/dsp4guitar/index';
 import TabFretWidget from '../native-plugins/tabfret/index';
 import NAWWidget from '../native-plugins/naw/index';

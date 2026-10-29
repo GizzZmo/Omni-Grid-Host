@@ -46,9 +46,9 @@ export default function App() {
       const reg = usePluginRegistry.getState();
       const bottom = useOmniStore.getState().layouts.reduce((max, item) => Math.max(max, item.y + item.h), 0);
       const has = (id: string) => reg.activeInstances.some((inst) => inst.pluginId === id);
-      if (!has('gizzzmo.audio.naw')) reg.spawnWidget('gizzzmo.audio.naw', { x: 0, y: bottom }, { w: 8, h: 5 });
-      if (!has('gizzzmo.audio.tabfret')) reg.spawnWidget('gizzzmo.audio.tabfret', { x: 8, y: bottom }, { w: 4, h: 2 });
-      if (!has('gizzzmo.audio.dsp4guitar')) reg.spawnWidget('gizzzmo.audio.dsp4guitar', { x: 8, y: bottom + 2 }, { w: 4, h: 3 });
+      if (!has('gizzzmo.audio.naw')) reg.spawnWidget('gizzzmo.audio.naw', { x: 0, y: bottom }, { w: 8, h: 6 });
+      if (!has('gizzzmo.audio.tabfret')) reg.spawnWidget('gizzzmo.audio.tabfret', { x: 8, y: bottom }, { w: 4, h: 6 });
+      if (!has('gizzzmo.audio.dsp4guitar')) reg.spawnWidget('gizzzmo.audio.dsp4guitar', { x: 8, y: bottom + 6 }, { w: 4, h: 6 });
     };
 
     if (usePluginRegistry.persist.hasHydrated()) {
@@ -61,12 +61,12 @@ export default function App() {
     <div className={`h-screen w-screen flex flex-col bg-cyber-bg text-white ${theme} scanlines relative`}>
       <MatrixRain />
       <div className="scanline absolute inset-0 z-50 pointer-events-none" />
-      <header className="h-14 min-h-14 flex items-center justify-between gap-3 px-4 sm:px-6 border-b border-cyan-500/30 bg-black/40 backdrop-blur overflow-hidden">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-cyan-400 rounded-sm flex items-center justify-center font-bold text-black">OG</div>
-          <h1 className="text-xl font-bold tracking-widest text-cyan-400">OMNI-GRID <span className="text-magenta-400">HOST 3.0</span></h1>
+      <header className="relative z-40 h-14 min-h-14 flex items-center justify-between gap-3 px-4 sm:px-6 border-b border-cyan-500/30 bg-black/40 backdrop-blur">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-8 h-8 shrink-0 bg-cyan-400 rounded-sm flex items-center justify-center font-bold text-black">OG</div>
+          <h1 className="text-sm sm:text-xl font-bold tracking-widest text-cyan-400 truncate">OMNI-GRID <span className="text-fuchsia-400">HOST 3.0</span></h1>
         </div>
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             onClick={() => setGridLocked(!gridLocked)}
             className={`px-2 py-1 rounded text-xs font-bold tracking-wide border ${

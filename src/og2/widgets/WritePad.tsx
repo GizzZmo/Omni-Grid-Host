@@ -1,0 +1,278 @@
+/// <reference lib="dom" />
+import React, { useState, useEffect, useRef } from 'react';
+import { FileText, Eraser, Sparkles, Copy, Check, Loader2, ArrowDownToLine } from 'lucide-react';
+import { useAppStore } from '../store';
+import { processCrossTalk } from '../services/gridIntelligence';
+import { COMMON_FILE_ACCEPTS } from './fileAccepts';
+import { getGenAIClient } from '../services/geminiService';
+
+const TEMPLATES: Record<string, string> = {
+  Blank: '',
+  'Cover Letter': `[Your Name]\n[Your Address]\n[City, State, Zip]\n[Your Email]\n[Your Phone Number]\n\n[Date]\n\n[Hiring Manager Name]\n[Company Name]\n[Company Address]\n\nDear [Hiring Manager Name],\n\nI am writing to express my enthusiastic interest in the [Job Title] position at [Company Name]. With my background in [Your Field/Experience], I am confident in my ability to contribute effectively to your team.\n\n[Paragraph 1: Introduction and Hook - Why this role?]\n\n[Paragraph 2: Highlight specific achievements and skills relevant to the job description.]\n\n[Paragraph 3: Connect your values with the company culture.]\n\nThank you for your time and consideration. I look forward to the possibility of discussing my application further.\n\nSincerely,\n\n[Your Name]`,
+  Resignation: `[Your Name]\n[Date]\n\n[Manager Name]\n[Company Name]\n\nDear [Manager Name],\n\nPlease accept this letter as formal notification that I am resigning from my position as [Your Job Title] at [Company Name]. My last day will be [Date].\n\nI want to express my gratitude for the opportunities I have had during my time here. I have enjoyed working with the team and have learned a great deal.\n\nI will do everything I can to ensure a smooth transition during my notice period.\n\nSincerely,\n\n[Your Name]`,
+  'Business Inquiry': `Subject: Inquiry Regarding [Product/Service] - [Your Company/Name]\n\nDear [Name/Team],\n\nI hope this email finds you well.\n\nMy name is [Your Name] and I am contacting you on behalf of [Your Company]. We are interested in [Product/Service Name] and would like to request more information regarding:\n\n1. [Specific Question 1]\n2. [Specific Question 2]\n3. Pricing and availability\n\nCould we schedule a brief call next week to discuss this further?\n\nBest regards,\n\n[Your Name]\n[Your Title]`,
+  'Meeting Minutes': `**Meeting Minutes**\n\n**Date:** [Date]\n**Time:** [Time]\n**Location:** [Location/Link]\n\n**Attendees:**\n- [Name 1]\n- [Name 2]\n\n**Agenda:**\n1. [Topic 1]\n2. [Topic 2]\n\n**Discussion Points:**\n- [Key Point 1]\n- [Key Point 2]\n\n**Action Items:**\n- [ ] [Task] - Assigned to: [Name] - Due: [Date]\n- [ ] [Task] - Assigned to: [Name] - Due: [Date]\n\n**Next Meeting:** [Date/Time]`,
+  Memo: `**MEMORANDUM**\n\n**TO:** [Recipient(s)]\n**FROM:** [Your Name]\n**DATE:** [Date]\n**SUBJECT:** [Subject]\n\n---\n\n**Background**\n[Brief context on why this memo is being written.]\n\n**Analysis/Update**\n[Detailed explanation of the situation, data, or update.]\n\n**Recommendation/Action Required**\n[Clear steps that need to be taken.]`,
+  Invoice: `INVOICE #[Number]\nDate: [Date]\nDue Date: [Date]\n\nFROM:\n[Your Name/Business]\n[Address]\n\nTO:\n[Client Name]\n[Address]\n\n| Description | Hours/Qty | Rate | Total |\n|-------------|-----------|------|-------|\n| [Item 1]    | 1         | $0   | $0    |\n| [Item 2]    | 1         | $0   | $0    |\n\nSubtotal: $0\nTax: $0\n**TOTAL: $0**\n\nPayment Terms: [Net 30/Due on Receipt]\nPayment Methods: [Bank Transfer/PayPal]`,
+};
+
+export const WritePad: React.FC = () => {
+  const { writePadContent, setWritePadContent } = useAppStore();
+  // Performance: Local state
+  const [localContent, setLocalContent] = useState(writePadContent);
+  const [selectedTemplate, setSelectedTemplate] = useState('Blank');
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [prompt, setPrompt] = useState('');
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync from store (e.g. reload or reset)
+  useEffect(() => {
+    setLocalContent(prev => (prev !== writePadContent ? writePadContent : prev));
+  }, [writePadContent]);
+
+  // Debounce sync to store
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      if (localContent !== writePadContent) {
+        setWritePadContent(localContent);
+      }
+    }, 600);
+    return () => clearTimeout(handler);
+  }, [localContent, writePadContent, setWritePadContent]);
+
+  const handleTemplateSelect = (key: string) => {
+    setSelectedTemplate(key);
+    // Templates update immediately
+    const content = TEMPLATES[key];
+    setLocalContent(content);
+    setWritePadContent(content);
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(localContent);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleAiDraft = async () => {
+    if (!prompt.trim()) return;
+    setLoading(true);
+    try {
+      const ai = getGenAIClient();
+      if (!ai) {
+        throw new Error('API key missing');
+      }
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: `Draft a formal document based on this request: "${prompt}". \n        \n        Keep the tone professional. \n        Use placeholders like [Name] where specific info is needed. \n        Do not include markdown code blocks, just raw text.`,
+      });
+      const generated = response.text || '';
+      setLocalContent(generated);
+      setWritePadContent(generated);
+      setShowPrompt(false);
+    } catch (_e: unknown) {
+      const error = _e instanceof Error ? _e : new Error(String(_e));
+      setLocalContent((prev: string) => `${prev}\n\n[AI Generation Failed: ${error.message}]`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Cross-Talk Drop Handler
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const droppedText = e.dataTransfer.getData('text/plain');
+
+    if (droppedText) {
+      setLoading(true);
+      try {
+        // Grid Intelligence: Cross-Talk Protocol
+        const processedContent = await processCrossTalk(droppedText, 'WritePad');
+        const newContent = localContent
+          ? `${localContent}\n\n${processedContent}`
+          : processedContent;
+        setLocalContent(newContent);
+        setWritePadContent(newContent);
+      } catch (_e) {
+        console.error('Cross-Talk failed');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleFileOpen = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    setLocalContent(text);
+    setWritePadContent(text);
+  };
+
+  const handleSaveFile = () => {
+    const blob = new Blob([localContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `writepad-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="h-full flex flex-col gap-3">
+      {/* Toolbar */}
+      <div
+        className="flex flex-wrap items-center gap-2 bg-slate-900 p-2 rounded-lg border border-slate-800"
+        role="toolbar"
+        aria-label="Editor Toolbar"
+      >
+        <select
+          value={selectedTemplate}
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+            handleTemplateSelect(e.target.value)
+          }
+          className="bg-slate-800 text-slate-200 text-xs rounded px-2 py-1 border border-slate-700 outline-none focus:border-rose-500 max-w-[150px]"
+          aria-label="Select Template"
+        >
+          {Object.keys(TEMPLATES).map(t => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+        </select>
+
+        <div className="w-[1px] h-4 bg-slate-700 mx-1"></div>
+
+        <button
+          onClick={handleFileOpen}
+          className="flex items-center gap-1 text-[10px] px-2 py-1 rounded font-bold transition-colors bg-slate-800 text-slate-400 hover:text-emerald-400"
+          aria-label="Open File"
+        >
+          <FileText size={12} /> Open
+        </button>
+        <button
+          onClick={handleSaveFile}
+          className="flex items-center gap-1 text-[10px] px-2 py-1 rounded font-bold transition-colors bg-slate-800 text-slate-400 hover:text-emerald-400"
+          aria-label="Save File"
+        >
+          <ArrowDownToLine size={12} /> Save
+        </button>
+
+        <div className="w-[1px] h-4 bg-slate-700 mx-1"></div>
+
+        <button
+          onClick={() => setShowPrompt(!showPrompt)}
+          className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded font-bold transition-colors ${showPrompt ? 'bg-rose-900/50 text-rose-300' : 'bg-slate-800 text-slate-400 hover:text-rose-400'}`}
+          aria-expanded={showPrompt}
+          aria-label="Toggle AI Draft Input"
+        >
+          <Sparkles size={12} /> AI Draft
+        </button>
+
+        <button
+          onClick={() => {
+            setLocalContent('');
+            setWritePadContent('');
+          }}
+          className="ml-auto text-slate-500 hover:text-red-400 transition-colors"
+          title="Clear"
+          aria-label="Clear Document"
+        >
+          <Eraser size={14} />
+        </button>
+      </div>
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept={COMMON_FILE_ACCEPTS}
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      {/* AI Prompt Input (Conditional) */}
+      {showPrompt && (
+        <div className="flex gap-2 p-2 bg-slate-900/50 border border-rose-900/30 rounded animate-in fade-in slide-in-from-top-2">
+          <input
+            value={prompt}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPrompt(e.target.value)}
+            placeholder="E.g., 'Write a polite decline email for a wedding invitation'..."
+            className="flex-1 bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-slate-200 focus:border-rose-500 focus:outline-none"
+            onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
+              e.key === 'Enter' && handleAiDraft()
+            }
+            aria-label="AI Prompt Input"
+          />
+          <button
+            onClick={handleAiDraft}
+            disabled={loading}
+            className="bg-rose-700 hover:bg-rose-600 text-white px-3 py-1 rounded text-xs font-bold disabled:opacity-50"
+            aria-label="Generate Draft"
+          >
+            {loading ? <Loader2 size={12} className="animate-spin" /> : 'Generate'}
+          </button>
+        </div>
+      )}
+
+      {/* Editor */}
+      <div
+        className={`flex-1 relative group rounded transition-all duration-300 ${isDragOver ? 'ring-2 ring-rose-500 bg-rose-900/20' : ''}`}
+        onDragOver={(e: React.DragEvent<HTMLDivElement>) => {
+          e.preventDefault();
+          setIsDragOver(true);
+        }}
+        onDragLeave={() => setIsDragOver(false)}
+        onDrop={handleDrop}
+      >
+        <textarea
+          value={localContent}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setLocalContent(e.target.value)}
+          className="w-full h-full bg-white text-slate-900 p-6 text-sm font-serif leading-relaxed resize-none focus:outline-none rounded shadow-inner selection:bg-rose-200"
+          placeholder="Select a template, start typing, or drop content here to draft automatically..."
+          aria-label="Document Editor"
+        />
+
+        {/* Copy Button Overlay */}
+        {localContent && (
+          <button
+            onClick={handleCopy}
+            className="absolute top-4 right-4 p-2 bg-white/90 border border-slate-200 text-slate-400 hover:text-rose-600 rounded-lg shadow-sm backdrop-blur-sm transition-all opacity-0 group-hover:opacity-100"
+            title="Copy to Clipboard"
+            aria-label="Copy Content"
+          >
+            {copied ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
+          </button>
+        )}
+
+        {/* Drag Overlay Indicator */}
+        {isDragOver && (
+          <div className="absolute inset-0 flex items-center justify-center bg-rose-500/10 pointer-events-none backdrop-blur-[1px] rounded">
+            <div className="bg-slate-900 text-rose-400 px-4 py-2 rounded-full shadow-2xl border border-rose-500 flex items-center gap-2 animate-bounce">
+              <ArrowDownToLine size={16} />
+              <span className="font-bold text-xs">Cross-Talk Active: Drop to Draft</span>
+            </div>
+          </div>
+        )}
+
+        {/* Loading Indicator */}
+        {loading && (
+          <div
+            className="absolute bottom-4 right-4 bg-slate-900 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-2"
+            role="status"
+          >
+            <Loader2 size={12} className="animate-spin" /> Processing Intent...
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

@@ -63,7 +63,9 @@ export function GridContainer() {
     const fit = () => {
       const available = el.clientHeight - 16;
       const margin = 6;
-      const next = Math.max(20, Math.floor((available - margin * Math.max(0, rows - 1)) / rows));
+      // Fit a readable band. Extra rows scroll instead of crushing every tile.
+      const fitRows = Math.min(Math.max(rows, 1), 8);
+      const next = Math.max(52, Math.floor((available - margin * Math.max(0, fitRows - 1)) / fitRows));
       setRowHeight((prev) => (prev === next ? prev : next));
     };
     fit();

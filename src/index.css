@@ -83,6 +83,8 @@ h1, h2, h3, .font-display {
 .react-grid-item > div {
   height: 100%;
   min-height: 0;
+  min-width: 0;
+  max-width: 100%;
 }
 .grid-locked .react-resizable-handle {
   display: none;

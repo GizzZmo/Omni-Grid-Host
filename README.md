@@ -16,6 +16,8 @@
 
 Four core tiles across the top. The audio chain — NAW, TABFRET, DSP4Guitar — sits underneath. The footer is the sidecar link: **C++ LINKED**, **PY LINKED**, and the provider slot.
 
+**Widgets** opens the Omni-Grid 2.0 library (40+ tiles: weather, cyber editor, marketplace, sudoku, prompt lab, and the rest). Search by name. New tiles drop into the next open cell at a readable size, and the desk scrolls instead of crushing them. **Grid locked** keeps every tile still.
+
 | Desk | Audio chain |
 | --- | --- |
 | ![Four core tiles with sidecars linked](docs/assets/desk.jpg) | ![NAW timeline, TABFRET, and DSP4Guitar](docs/assets/audio-desk.jpg) |
