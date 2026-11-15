@@ -14,7 +14,8 @@
     "tauri:build": "tauri build",
     "desktop": "npm run tauri:dev",
     "plugin:bundle": "tsx scripts/omni-plugin-cli.ts",
-    "plugin:sync-all": "tsx scripts/omni-plugin-cli.ts --batch-profile"
+    "plugin:sync-all": "tsx scripts/omni-plugin-cli.ts --batch-profile",
+    "test": "echo \"No automated tests yet — CI placeholder\" && exit 0"
   },
   "dependencies": {
     "react": "^19.0.0",
@@ -22,7 +23,6 @@
     "zustand": "^5.0.0",
     "react-grid-layout": "^1.5.0",
     "lucide-react": "^0.460.0",
-    "ws": "^8.18.0",
     "ws": "^8.18.0",
     "@tauri-apps/api": "^2.0.0"
   },
@@ -35,6 +35,7 @@
     "vite": "^6.0.0",
     "tailwindcss": "^4.0.0",
     "@tailwindcss/vite": "^4.0.0",
-    "concurrently": "^9.0.0"
+    "concurrently": "^9.0.0",
+    "tsx": "^4.19.0"
   }
 }

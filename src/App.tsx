@@ -44,11 +44,13 @@ export default function App() {
 
     const placeAudioChain = () => {
       const reg = usePluginRegistry.getState();
+      // Only auto-place on a truly empty desk (first run) to avoid surprising returning users
+      if (reg.activeInstances.length > 0) return;
+
       const bottom = useOmniStore.getState().layouts.reduce((max, item) => Math.max(max, item.y + item.h), 0);
-      const has = (id: string) => reg.activeInstances.some((inst) => inst.pluginId === id);
-      if (!has('gizzzmo.audio.naw')) reg.spawnWidget('gizzzmo.audio.naw', { x: 0, y: bottom }, { w: 8, h: 6 });
-      if (!has('gizzzmo.audio.tabfret')) reg.spawnWidget('gizzzmo.audio.tabfret', { x: 8, y: bottom }, { w: 4, h: 6 });
-      if (!has('gizzzmo.audio.dsp4guitar')) reg.spawnWidget('gizzzmo.audio.dsp4guitar', { x: 8, y: bottom + 6 }, { w: 4, h: 6 });
+      reg.spawnWidget('gizzzmo.audio.naw', { x: 0, y: bottom }, { w: 8, h: 6 });
+      reg.spawnWidget('gizzzmo.audio.tabfret', { x: 8, y: bottom }, { w: 4, h: 6 });
+      reg.spawnWidget('gizzzmo.audio.dsp4guitar', { x: 8, y: bottom + 6 }, { w: 4, h: 6 });
     };
 
     if (usePluginRegistry.persist.hasHydrated()) {

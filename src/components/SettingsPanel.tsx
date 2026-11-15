@@ -182,8 +182,8 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
           </div>
         </div>
 
-        <p className="mt-3 text-[10px] text-slate-500">
-          Keys are stored locally in your browser (Zustand persist). They are never sent to Omni-Grid servers.
+        <p className="mt-3 text-[10px] text-amber-400/90 bg-amber-500/10 border border-amber-500/30 rounded px-2 py-1.5">
+          ⚠ Keys are stored in plain text in browser localStorage (Zustand persist). Never use this on a shared or untrusted machine. They are never sent to Omni-Grid servers.
         </p>
       </div>
     </div>
