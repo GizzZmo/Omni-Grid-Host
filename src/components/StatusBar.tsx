@@ -25,7 +25,7 @@ export function StatusBar() {
   return (
     <footer className="h-8 flex items-center justify-between gap-2 px-3 sm:px-6 text-[10px] bg-black/60 border-t border-cyan-500/20 text-cyan-300/70 overflow-hidden">
       <div className="truncate">
-        <span className="hidden sm:inline">PROTOCOL: LOCAL-FIRST | POLYGLUT MICROKERNEL | </span>
+        <span className="hidden sm:inline">PROTOCOL: LOCAL-FIRST | POLYGLOT MICROKERNEL | </span>
         CROSS-TALK BUS ACTIVE
       </div>
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">

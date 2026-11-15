@@ -10,7 +10,7 @@
 
 ![Omni-Grid Host banner](docs/assets/banner.jpg)
 
-**Live desk:** [omni-grid-host.vercel.app](https://omni-grid-host.vercel.app)
+**Live desk:** [omni-grid-host.vercel.app](https://omni-grid-host.vercel.app) *(currently paused — clone and run locally instead)*
 
 ## The desk
 
@@ -49,7 +49,7 @@ Brand marks live in [docs/assets](docs/assets) and are served from `public/brand
 Click **⚙ Settings** in the header to set:
 
 - **Provider**: OpenAI, Anthropic, Gemini, Groq, Ollama (local), or custom OpenAI-compatible
-- **API Key**: Stored locally in the browser (never sent to Omni-Grid servers)
+- **API Key**: Stored locally in the browser (plain localStorage — never sent to Omni-Grid servers). **Do not use on shared machines.**
 - **Base URL** (for Ollama / custom)
 - **Model** (optional override)
 
